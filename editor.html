@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>WebVS Editor</title>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="default.css" />
+	<script type="text/javascript" src="editor.js"></script>
+</head>
+<body>
+	<div id="area">
+		<div id="windowcontainer"></div>
+		<div id="taskbar">
+			<div id="taskmenubutton" onclick="toggleTaskMenu(event);"></div>
+			<div id="appholder"></div>
+			<div id="trayclock"></div>
+		</div>
+		<div id="taskmenu" class="menu"><ul>
+			<!--<li onclick="parseInput('show'); hideTaskMenu();"/><div class="menuicon" style="background:url(16x16x8_.png);"></div>Qonsole</li>
+			<li onclick="newAboutWindow(); hideTaskMenu();"/><div class="menuicon" style="background:url(16x16x8_.png);"></div>About QIOS</li>
+			<li><div class="menuspacer"></div></li>-->
+			<li onclick="newWindow({'caption': 'Blank window', 'icon': '16x16x8_.png', 'height': 100}); hideTaskMenu();"/><div class="menuicon"></div>New blank window</li>
+			<!--<li onclick="newYouTubeWindow(); hideTaskMenu();"><div class="menuicon" style="background:url(youtube.ico);"></div>YouTube</li>-->
+			<li onclick="newDirView(); hideTaskMenu();"><div class="menuicon"></div>WebVS Editor</li>
+		</ul></div>
+	</div>
+</body>
+</html>

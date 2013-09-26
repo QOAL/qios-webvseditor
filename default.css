@@ -1,0 +1,552 @@
+body {
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	background: #77addf center center fixed no-repeat;
+	background-image: linear-gradient(to top, #a6c2dc 0%, #77addf 50%, #4d79b0 100%);
+	background-size: cover;
+	cursor: default;
+}
+
+/* * { cursor: url(mouse.png) 1 2, default; }*/
+
+body, input, textarea {
+	font-size: x-small;
+	font-family: verdana, arial, helvetica, sans-serif;
+}
+
+* {
+	-moz-user-select: -moz-none;
+	-webkit-user-select: none;
+	user-select: none;
+}
+input, textarea {
+	-moz-user-select: text;
+	-webkit-user-select: text;
+	user-select: text;
+}
+::selection {background:transparent}
+
+body, textarea, a { color: #000; }
+
+a:hover { text-decoration: none; }
+
+#area {
+	position: absolute;
+	width:100%;
+	height:100%;
+	overflow: hidden;
+}
+
+.window {
+	position: absolute;
+	width: 322px;
+	height: 262px;
+	min-width: 320px;
+	min-height: 100px;
+	top: 100px;
+	left: 100px;
+	/*-moz-border-radius: 0 10px 0 0;*/
+	border-radius: 6px 10px 3px 3px;
+	box-shadow: 1px 1px 5px rgba(0,0,0,.5);
+	/*cursor: default;*/
+	overflow: hidden;
+}
+
+.titlebar {
+	color: #fff;
+	height: 20px;
+	line-height: 20px;
+	/*background: #272729;
+	background: linear-gradient(to left, #060605 0%, #474744 100%);
+	-moz-box-shadow: inset 1px 1px rgba(0,0,0,.38), inset 2px 0 #3e3e3c;
+	-moz-border-radius: 0 9px 0 0;*/
+	background: #303030;
+	background: linear-gradient(to bottom, #404040 0%, #383838 45%, #282828 55%, #202020 100%);
+	box-shadow: inset 0 2px 5px rgba(0,0,0,.25), inset 0 -2px 5px rgba(0,0,0,.25);
+	border-radius: 5px 9px 0 0;
+	text-shadow: 1px 1px 0 #000;
+}
+
+.titlebaricon {
+	width: 16px;
+	height: 16px;
+	background: url(16x16x8_.png) no-repeat;
+	float: left;
+	margin: 2px 4px 2px 3px;
+}
+
+.titlebarbutton {
+	float: right;
+	width: 14px;
+	height: 14px;
+	margin: 3px 5px 2px 0;
+	/*background: -moz-radial-gradient(
+		center center, circle closest-side,
+		#fff 30%,
+		rgba(255,255,255,0) 45%
+	);*/
+	background: radial-gradient(circle at center, #fff 20%, rgba(255,255,255,0) 32.5%);
+}
+
+.titlebarbutton:hover {
+	/*background: -moz-radial-gradient(
+		center center, circle closest-side,
+		#fff 30%,
+		rgba(255,255,255,0) 45%,
+		#fff 65%,
+		rgba(255,255,255,0) 80%
+	);*/
+	background: radial-gradient(circle at center, #fff 20%, rgba(255,255,255,0) 32.5%, rgba(255,255,255,0) 40%, #fff 50%, rgba(255,255,255,0) 60%);
+}
+
+.titlebarbutton:active {
+	/*background: -moz-radial-gradient(
+		center center, circle closest-side,
+		#fff 30%,
+		rgba(255,255,255,0) 45%,
+		rgba(255,255,255,0) 70%,
+		rgba(255,255,255,.5) 85%,
+		rgba(255,255,255,0) 100%
+	);*/
+	background: radial-gradient(circle at center, #fff 20%, rgba(255,255,255,0) 32.5%, rgba(255,255,255,0) 50%, rgba(255,255,255,.5) 61.25%, rgba(255,255,255,0) 72.5%);
+}
+
+.form {
+	background: #f0f0f0;
+	position: absolute;
+	top: 20px;
+	bottom: 2px;
+	left: 0;
+	right: 0;
+	/*border-left: 1px solid #909090;
+	border-right: 1px solid #909090;*/
+}
+
+.winb {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: #303030;
+	border-radius: 0 0 3px 3px;
+}
+
+.winresize {
+	position: absolute;
+	bottom: 2px;
+	right: 0;
+	width: 15px;
+	height: 15px;
+	overflow:hidden;
+	cursor: nwse-resize;
+	border-radius: 100% 0 0 0; /* basically just for clipping */
+}
+.winresize:before {
+	position: absolute;
+	bottom: 0;
+	content: "";
+	height: 0;
+	width: 0;
+	border: 15px solid rgba(48, 48, 48, 0);
+	border-bottom-color: #303030;
+	pointer-events: none;
+}
+/*Optional, and needs the background colour to be a solid colour*/
+.winresize.windowCurve:after {
+	content: "";
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	width: 15px;
+	height: 15px;
+	background: #f0f0f0;
+	border-radius: 0 0 100% 0;
+	pointer-events: none;
+}
+
+#desktopsel {
+	display: none;
+	position: absolute;
+	border: 1px solid rgba(202,245,249,.25);
+	background: rgba(148,194,242,.5);
+	box-shadow: 0 0 10px rgba(255,255,255,.125);
+}
+
+#taskbar {
+	position: absolute;
+	z-index: 1000;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	/*cursor: default;*/
+	overflow: hidden;
+	color: #fff;
+	height: 22px;
+	line-height: 20px;
+	background: #343434;
+	background: linear-gradient(to bottom, #404040 0%, #383838 45%, #303030 55%, #282828 100%);
+	box-shadow: inset 0 2px 5px rgba(0,0,0,.25), inset 0 -2px 5px rgba(0,0,0,.25), 0 5px 10px 5px rgba(0,0,0,.5);
+}
+
+#taskmenubutton {
+	position: absolute;
+	left: 0;
+	width: 50px;
+	height: 22px;
+	margin-right: 10px;
+	background: radial-gradient(14px at center, #fff 20%, rgba(255,255,255,0) 32.5%);
+}
+
+#taskmenubutton:hover {
+	background: radial-gradient(14px at center, #fff 20%, rgba(255,255,255,0) 32.5%, rgba(255,255,255,0) 40%, #fff 50%, rgba(255,255,255,0) 60%);
+}
+
+#taskmenubutton:active {
+	background: radial-gradient(14px at center, #fff 20%, rgba(255,255,255,0) 32.5%, rgba(255,255,255,0) 50%, rgba(255,255,255,.5) 61.25%, rgba(255,255,255,0) 72.5%);
+}
+
+.menu {
+	/*cursor: default;*/
+	overflow: hidden;
+	background: #f0f0f0;
+	border: 1px solid #c0c0c0;
+	width: 146px; /* menus need to have a max width, but generally it's the width of the widest entry */
+	box-shadow: 5px 5px 3px -3px rgba(0,0,0,.5);
+	border-radius: 3px;
+}
+
+.menu ul {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+
+.menu ul li {
+	color: #000;
+	line-height: 20px;
+	border-radius: 2px;
+}
+
+.menu ul li:hover {
+	background: #303030;
+	color: #fff;
+}
+
+.menuicon {
+	float: left;
+	width: 16px;
+	height: 16px;
+	margin: 2px 8px 2px 2px;
+}
+
+.menuspacer {
+	height: 0px;
+	border-top: 1px solid #e0e0e0;
+	border-bottom: 1px solid #fff;
+	margin: 4px 0 4px 0;
+}
+
+#taskmenu {
+	display: none;
+	position: absolute;
+	bottom: 22px;
+	z-index: 1001;
+}
+
+#trayclock  {
+	position: absolute;
+	right: 5px;
+	height: 22px;
+	width: 35px;
+	text-align: right;
+	line-height: 22px;
+	text-shadow: 1px 1px 0 #000;
+}
+
+#appholder {
+	overflow: hidden;
+	position: absolute;
+	left: 55px;
+	right: 45px;
+}
+
+.tbwindow {
+	float: left;
+	height: 22px;
+	line-height: 22px;
+	width: 160px;
+	margin: 0 5px 0 0;
+	text-shadow: 1px 1px 0 #000;
+}
+
+#appholder .titlebaricon {
+	margin: 4px 5px 2px 5px;
+}
+
+.tbwindow:hover {
+	background: #444;
+	background: linear-gradient(to bottom, #505050 0%, #484848 45%, #404040 55%, #383838 100%);
+	box-shadow: inset 0 2px 5px rgba(0,0,0,.25), inset 0 -2px 5px rgba(0,0,0,.25);
+}
+
+.tbwindow:active {
+	background: #2c2c2c;
+	background: linear-gradient(to bottom, #383838 0%, #303030 45%, #282828 55%, #202020 100%);
+	box-shadow: inset 0 2px 5px rgba(0,0,0,.25), inset 0 -2px 5px rgba(0,0,0,.25);
+}
+
+div.pbm {
+	position: absolute;
+	padding: 4px;
+	color: #000;
+	text-shadow: 1px 1px 0 rgba(255,255,255,.25);
+	background: rgba(255,255,255,.5);
+	border: 1px solid rgba(255,255,255,.625);
+	box-shadow: 1px 1px 5px rgba(0,0,0,.6), inset 0 0 5px rgba(255,255,255,.25);
+	border-radius: 5px;
+	-moz-user-select: none;
+}
+
+/* BEGIN APPLICATION CSS */
+
+.winnav {
+	/*height: 23px;*/
+	background: #f0f0f0;
+	background: linear-gradient(to bottom, #f3f3f3 0%, #ececec 40%, #e4e4e4 60%, #dfdfdf 100%);
+	/*line-height: 22px;*/
+	border-bottom: 1px solid #d0d0d0;
+	height: 22px;
+}
+
+.wincontent {
+	padding-left: 5px;
+	width:100%;
+	height:100%;
+	background: #fff;
+	/* */
+	overflow: auto;
+}
+
+#editorTreeHost {
+	float: left;
+	height: calc(100% - 39px);
+	width: 200px;
+	position: relative;
+}
+
+#editorTreeButtons {
+	padding: 2px 2px 0 2px;
+	height: 20px;
+}
+
+#editorTree {
+	background: #fff;
+	height: calc(100% - 29px);
+	margin: 3px;
+	border: 1px solid #d0d0d0;
+	border-radius: 5px;
+	overflow: auto;
+}
+
+#editorTree div {
+	margin: 2px 0;
+	padding: 2px 0 2px 5px;
+}
+/*#editorTree div:hover {
+	background: rgba(148,194,242,.25);
+}
+#editorTree div:active {
+	background: rgba(148,194,242,.5);
+}*/
+.selectedEffect {
+	background: rgba(148,194,242,.5);
+	background: linear-gradient(to bottom, rgba(148,194,242,.375) 0%, rgba(148,194,242,.5) 45%, rgba(148,194,242,.625) 55%, rgba(148,194,242,.375) 100%);
+	text-shadow: 0 1px rgba(255,255,255,.5);
+}
+.effectTree.selectedEffect {
+	background-size: 100% 18px; /*The height here is lame, we're really dependant on things being a fixed pixel height right now*/
+	background-repeat: no-repeat;
+}
+#editorTree .effectTree {
+	/**/
+	margin-bottom: 0;
+	padding-bottom: 0;
+	position: relative;
+}
+#editorTree .effectTree div {
+	margin: 2px 0 2px -5px;
+	padding-left: 15px;
+}
+#editorTree .effectTree:after {
+	position: absolute;
+	top: 16px;
+	display: block;
+	content: "";
+	height: calc(100% - 25px);
+	width: 1px;
+	margin-left: 3px;
+	background: #a8a8a8;
+	background: rgba(0,0,0,.341);
+}
+#editorTree .effectTree div:before {
+	content: "";
+	position: relative;
+	top: -3px;
+	width: 4px;
+	height: 1px;
+	background: #a8a8a8;
+	background: rgba(0,0,0,.341);
+	display: inline-block;
+	margin-left:-6px;
+	margin-right: 2px;
+}
+#editorTree .effectTree div:last-child:before { /* Some AA for the last tree node */
+	box-shadow: -1px 0 0 rgba(0, 0, 0, .211); /*rgba(168, 168, 168, .625)*/
+}
+#editorTree .effectTree div:last-of-type{
+	margin-bottom: 0;
+}
+.dummyEffect {
+	opacity: .625;
+}
+/*
+	Oh dear, this is stupid.
+	This CSS corrects the indentation for nested effect lists
+	It fixes being able to click the left side + the selected BG
+*/
+#editorTree .effectTree .effectTree div {
+	margin: 2px 0 2px -20px;
+	padding-left: 30px;
+}
+#editorTree .effectTree .effectTree .effectTree div {
+	margin: 2px 0 2px -35px;
+	padding-left: 45px;
+}
+#editorTree .effectTree .effectTree .effectTree .effectTree div {
+	margin: 2px 0 2px -50px;
+	padding-left: 60px;
+}
+#editorTree .effectTree .effectTree .effectTree .effectTree .effectTree div {
+	margin: 2px 0 2px -65px;
+	padding-left: 75px;
+}
+#editorTree .effectTree .effectTree .effectTree .effectTree .effectTree .effectTree div {
+	margin: 2px 0 2px -80px;
+	padding-left: 90px;
+}
+
+#effectHost {
+	float: left;
+	width: calc(100% - 200px);
+	height: calc(100% - 39px);
+	overflow: hidden;
+}
+
+#effectHost fieldset {
+	border-radius: 5px;
+	border: 1px solid #d0d0d0;
+	height: calc(100% - 18px);
+	margin: 3px;
+}
+
+#effectContainer {
+	height: 100%;
+	overflow: hidden;
+	overflow-y: auto;
+	padding-right: 6px;
+}
+
+#editorStatusbar {
+	position: absolute;
+	bottom: 0;
+	left: 5px;
+	right: 20px;
+	height: 18px;
+	line-height: 18px;
+}
+/* END APPLICATION CSS */
+
+img { border: 0; }
+
+* { -moz-user-select: -moz-none; }
+input, textarea { -moz-user-select: text; }
+button::-moz-focus-inner, input::-moz-focus-inner { border: 0; padding: 0; }
+
+/*input[type=button] {
+	margin: 1px;
+	border: 1px solid #b8b8b6;
+	border-radius: 3px;
+	background: #303030;
+	background: linear-gradient(to bottom, #f3f3eb 0%, #ecece3 45%, #e4e4db 55%, #dfdfd5 100%);
+	padding: 4px 7px 3px 7px;
+	box-shadow: inset 0 1px rgba(255,255,255,.35), inset 1px 0 rgba(255,255,255,.5), inset -1px 0 rgba(255,255,255,.5), inset 0 -1px rgba(0,0,0,.06);
+}
+
+input[type=button]:hover {
+	border-color: #27d4e2 #2bc3cf #30afb9 #2bc3cf;
+	box-shadow: inset 0 1px 0 #50e2ed, inset 1px 0 0 #34cfdd, inset -1px 0 0 #44d3e0, inset 0 -1px 0 #2db9c4,
+		inset 0 2px #3addea, inset 2px 0 #34cfdd, inset 0 -2px #2dbfcc, inset -2px 0 #34cfdd;
+}
+
+input[type=button]:active {
+	border-color: #bdbdb4 #c0c0b8 #b3b3ab #c0c0b8;
+	background: linear-gradient(to bottom, #d8d8cf 0%, #d8d8cf 20%, #f0f0ec 80%, #f0f0ec 100%);
+	padding: 4px 6px 3px 8px;
+	box-shadow: inset 0 1px #f3f3e9, inset 1px 0 rgba(255,255,255,.5), inset -1px 0 rgba(255,255,255,.5);
+}*/
+
+input[type=button] {
+	background: linear-gradient(to bottom, #f3f3f3 0%, #ececec 40%, #e4e4e4 60%, #dfdfdf 100%);
+	border: 1px solid #c8c8c8;
+	padding: 1px 5px;
+	margin: 2px;
+	border-radius: 3px;
+	box-shadow: inset 0 0 0 1px rgba(255,255,255,.5);
+	text-shadow: 0 1px .5px #fff;
+	color: #303030;
+}
+input[type=button]:hover {
+	border: 1px solid #a8a8a8;
+	color: #000;
+}
+input[type=button]:active {
+	background: linear-gradient(to bottom, #e3e3e3 0%, #dcdcdc 40%, #d4d4d4 60%, #cfcfcf 100%);
+	/*background: linear-gradient(to bottom, #f3f3f3 0%, #ececec 40%, #e4e4e4 60%, #dfdfdf 100%);*/
+	border: 1px solid #b0b0b0;
+	box-shadow: inset 0 0px 0 1px rgba(255,255,255,.5), inset 0 1px 2px 1px rgba(64,64,64,.25);
+	text-shadow: 0 0 3px #fff, -1px 0 0 rgba(0,0,0,.25);
+	color: #000;
+	text-indent: 1px;
+	padding-right: 4px;
+}
+
+/*input[type=text], textarea {
+	border: 1px solid #bcbcb1;
+	background: #f5f5ef;
+	padding: 2px 1px 2px 1px;
+}
+input[type=text]:hover, textarea:hover { border-color: #1bcbd9; }
+input[type=text]:focus, textarea:focus { border-color: #bcbcb1; }*/
+
+input[type=text], textarea {
+	color: #000;
+	background: #fff;
+	border: 1px #c8c8c8 solid;
+	border-radius: 3px;
+}
+
+input[type=text]{
+	/*height: 1.25em;*/
+	width: 20em;
+	padding-left: 2px;
+}
+
+textarea {
+	padding: 2px;
+}
+
+input[type=text]:hover, textarea:hover {
+	border: 1px #a8a8a8 solid;
+}
