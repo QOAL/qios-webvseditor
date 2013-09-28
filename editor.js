@@ -477,7 +477,7 @@ function newWindow(info) {
 	if (windows[wID].name) { newWin.name = windows[wID].name; }
 	newWin.innerHTML = '<div id="t' + wID + '" class="titlebar">' +
 		'<div class="titlebarIcon" style="background-image: url(' + windows[wID].icon + ')"></div><div class="titlebarCaption">' + windows[wID].caption + '</div>' +
-		'<div class="titlebarButton" title="Close" onclick="closeWindow(event, ' + wID + ')"></div><div class="titlebarButton"></div><div class="titlebarButton" title="Minimize" onclick="showWindow(' + wID + ', false)"></div></div>' +
+		'<div class="titlebarButton" title="Minimize" onclick="showWindow(' + wID + ', false)"></div><div class="titlebarButton"></div><div class="titlebarButton" title="Close" onclick="closeWindow(event, ' + wID + ')"></div></div>' +
 		'<div id="f' + wID + '" class="form">' + (windows[wID].form ? windows[wID].form : '') + '</div><div class="winb"></div>' + (info.resizeable ? '<div class="winresize windowCurve" id="wr' + wID + '"></div>' : '');
 	newWin.style.width = windows[wID].width ? windows[wID].width + "px" : "auto";
 	newWin.style.height = windows[wID].height ? windows[wID].height + 22 + "px": "auto";
@@ -729,7 +729,7 @@ function popOutThis(e) {
 	var effectElement = e.target.parentNode;
 	var effectID;
 	for (var i = 0; i < effectElement.childNodes.length; i++) {
-		console.log(effectElement.childNodes[i]);
+		//console.log(effectElement.childNodes[i]);
 		if (effectElement.childNodes[i].id) {
 			effectID = effectElement.childNodes[i].id.split('-');
 			effectElement.childNodes[i].disabled = 'disabled';
