@@ -199,9 +199,9 @@ function mousemove(e) {
 	oMousePos = [mousePos[0], mousePos[1]];
 	mousePos[0] = e.pageX ? e.pageX : e.clientX + (document.body.scrollLeft || document.documentElement.scrollLeft);
 	mousePos[1] = e.pageY ? e.pageY : e.clientY + (document.body.scrollTop || document.documentElement.scrollTop);
-	if (mdti > -1 && windows[mdti].fixed != true) {
+	if (mdti != -1 && windows[mdti].fixed != true) {
 		//Not that the code would go here but still, if they resize the viewport check for windows being off screen!
-		cWin = document.getElementById(mdti).parentNode;
+		cWin = document.getElementById('w' + mdti);
 		if (mdwi == -1) { mdwi = mdti; cWin.style.opacity = .625; }
 		windows[mdti].pos.x += mousePos[0] - oMousePos[0];
 		windows[mdti].pos.y += mousePos[1] - oMousePos[1];
@@ -276,13 +276,13 @@ function mousedown(e) {
 		var selectedEle = e.target;
 	}
 	if (selectedEle.className || selectedEle.parentNode.parentNode.className != "menu") { document.getElementById('taskmenu').style.display = 'none'; }
-	if (selectedEle && selectedEle.id && selectedEle.className == "titlebar" && e.which == 1) { mdti = selectedEle.id; };
+	if (selectedEle && selectedEle.id && selectedEle.className == "titlebar" && e.which == 1) { mdti = selectedEle.id.substr(1); };
 
-	while (selectedEle && selectedEle.className != 'window' && selectedEle != null && selectedEle != document.body) {
+	while (selectedEle && selectedEle.className.substr(0, 6) != 'window' && selectedEle != null && selectedEle != document.body) {
 		selectedEle = selectedEle.parentNode;
 	}
 
-	wID = selectedEle.childNodes[0].id;
+	wID = selectedEle.id.substr(1);
 	if (wID != undefined && wID != wzi[wzi.length - 1] && wzi.length > 1) {
 		sortWindowsZIndex(wID);
 	}
@@ -324,7 +324,7 @@ function mousedown(e) {
 function mouseup(e) {
 	mdti = -1;
 	if (mdwi != -1) {
-		document.getElementById(mdwi).parentNode.style.opacity = 1;
+		document.getElementById('w' + mdwi).style.opacity = 1;
 		mdwi = -1;
 	}
 	if (wrid != -1 && e.button == 0) {
@@ -404,7 +404,8 @@ function sortWindowsZIndex(topid) {
 	}
 
 	for (var i = 0; i < tWO.length; i++) {
-		document.getElementById(tWO[i]).parentNode.style.zIndex = i;
+		document.getElementById('w' + tWO[i]).style.zIndex = i;
+		document.getElementById('w' + tWO[i]).setAttribute('class', 'window' + (i == tWO.length - 1 ? ' activeWindow' : ''));
 	}
 	wzi = tWO;
 }
@@ -412,6 +413,7 @@ function sortWindowsZIndex(topid) {
 //Shouldn't be broken, but the above kinda makes it buggy?
 function closeWindow(evt, id) {
 	if (evt.which == 1) {
+		if (windows[id].close) { windows[id].close(id); }
 		/*delete wzi[wzi.length - 1];
 		wzi = wzi.join().split();
 		delete windows[id];*/
@@ -421,9 +423,9 @@ function closeWindow(evt, id) {
 
 		document.getElementById('w' + id).style.pointerEvents = "none";
 		fadeOut('w' + id);
-		if (document.getElementById(id + 'tb')) {
-			document.getElementById(id + 'tb').style.pointerEvents = "none";
-			fadeOut(id + 'tb');
+		if (document.getElementById('tb' + id)) {
+			document.getElementById('tb' + id).style.pointerEvents = "none";
+			fadeOut('tb' + id);
 		}
 	};
 }
@@ -473,10 +475,10 @@ function newWindow(info) {
 	newWin.className = 'window';
 	newWin.id = 'w' + wID;
 	if (windows[wID].name) { newWin.name = windows[wID].name; }
-	newWin.innerHTML = '<div id="' + wID + '" class="titlebar">' +
-		'<div class="titlebaricon" style="background-image: url(' + windows[wID].icon + ')"></div>' + windows[wID].caption +
-		'<div class="titlebarbutton" title="Close" onclick="closeWindow(event, ' + wID + ')"></div><div class="titlebarbutton"></div><div class="titlebarbutton" title="Minimize" onclick="showWindow(' + wID + ', false)"></div></div>' +
-		'<div id="' + wID + 'f" class="form">' + (windows[wID].form ? windows[wID].form : '') + '</div><div class="winb"></div>' + (info.resizeable ? '<div class="winresize windowCurve" id="wr' + wID + '"></div>' : '');
+	newWin.innerHTML = '<div id="t' + wID + '" class="titlebar">' +
+		'<div class="titlebarIcon" style="background-image: url(' + windows[wID].icon + ')"></div><div class="titlebarCaption">' + windows[wID].caption + '</div>' +
+		'<div class="titlebarButton" title="Close" onclick="closeWindow(event, ' + wID + ')"></div><div class="titlebarButton"></div><div class="titlebarButton" title="Minimize" onclick="showWindow(' + wID + ', false)"></div></div>' +
+		'<div id="f' + wID + '" class="form">' + (windows[wID].form ? windows[wID].form : '') + '</div><div class="winb"></div>' + (info.resizeable ? '<div class="winresize windowCurve" id="wr' + wID + '"></div>' : '');
 	newWin.style.width = windows[wID].width ? windows[wID].width + "px" : "auto";
 	newWin.style.height = windows[wID].height ? windows[wID].height + 22 + "px": "auto";
 
@@ -498,6 +500,9 @@ function newWindow(info) {
 		newWin.style.top = windows[wID].pos.y + "px";
 	}
 	newWin.style.zIndex = wzi.push(wID) - 1; //we don't support always on top order yet.
+	sortWindowsZIndex(wID); //Sort the windows here to change the active window CSS
+
+	if (info.minwidth) { newWin.style.minWidth = info.minwidth + "px"; }
 
 	if (info.resizeable) {
 		windows[wID].resize = {"state": 0, "x": 0, "y": 0}; //Resizing info
@@ -505,12 +510,15 @@ function newWindow(info) {
 	}
 	
 	if (info.init) { windows[wID].init = info.init; windows[wID].init(); }
+
+	if (info.close) { windows[wID].close = info.close; }
+
 	newItem = document.createElement('div');
 	newItem.className = 'tbwindow';
-	newItem.id = wID + 'tb';
+	newItem.id = 'tb' + wID;
 	var showthis = function(id){return function(){showWindow(id, true);sortWindowsZIndex(id);}}; showthis = showthis(wID);
 	eventHook(newItem, 'click', showthis);
-	newItem.innerHTML = '<div class="titlebaricon" style="background-image: url(' + windows[wID].icon + ')"></div>' + windows[wID].caption;
+	newItem.innerHTML = '<div class="titlebarIcon" style="background-image: url(' + windows[wID].icon + ')"></div>' + windows[wID].caption;
 	document.getElementById("appholder").appendChild(newItem);
 }
 
@@ -518,15 +526,10 @@ function buildEditor(wID) {
 	//document.getElementById(wID + 'f').innerHTML += '<div class="winnav"><input type="button" value="&#9650;" title="Up" /><input type="text" /><input type="button" value="&#9654;" title="Go" /><input type="button" value="Hello"/></div><div class="wincontent"><div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div></div>';
 }
 
-function newDirView(dir) {
+function newEditorWindow() {
 	//Need to make sure there is only one of these at a time!
 	//newWindow({"caption": "WebVS Editor", "icon": "brush_light_icon.png", "width": 640, "height": 480, "resizeable": true, "init": function() { buildEditor(this.wID)}});
-	newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "resizeable": true, "form": '<div class="winnav"><!--<input type="button" value="&#9650;" title="Up" /><input type="text" /><input type="button" value="&#9654;" title="Go" />--><input type="button" value="Hello"/></div><div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - "/><input type="button" value=" + "/><input type="button" value="x2"/></div><div id="editorTree"></div></div><div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div><div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>', "init": buildEditorTree});
-}
-
-function newAboutWindow() {
-	newWindow({"name": "about", "icon": "16x16x8_.png", "caption": "About QIOS", "width": "auto", "height": 85, "form":
-	'<div style="padding: 5px; line-height: 2em;"><strong>QIOS</strong> - Quiche_on_a_leashs Internet Operating System<br />Written by Scott Ellis / Quiche_on_a_leash / QOAL<br /><br />Patches are welcome! - AGPLv3</div>'});
+	newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": '<div class="winnav"><!--<input type="button" value="&#9650;" title="Up" /><input type="text" /><input type="button" value="&#9654;" title="Go" />--><input type="button" value="Hello"/></div><div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - "/><input type="button" value=" + "/><input type="button" value="x2"/></div><div id="editorTree"></div></div><div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div><div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>', "init": buildEditorTree});
 }
 
 function toggleTaskMenu(e) {
@@ -675,14 +678,14 @@ function displayEffectView(e) {
 function buildPaneElement(typeInfo, data, name, parent) {
 	if (typeof data == 'undefined' || !typeInfo.control) { return ''; }
 	var thisID = (parent != '' ? parent + '-' : '') + name;
-	var output = '<div style=\"display:table;margin-bottom:5px;position:relative;width:100%\">'
+	var output = '<div class="paneElementHost">'
 	if (typeInfo.label) {	output += "<div>" + typeInfo.label + "</div>"; }
 	switch (typeInfo.control) {
 		case control_null:
 			//
 			break;
 		case control_code:
-			output += '<textarea id="' + thisID + '" style=\"width:100%;resize: vertical\">' + data + '</textarea>';
+			output += '<div class="popOutLink" onclick="popOutThis(event);">\u2197</div><textarea id="' + thisID + '" style=\"width:100%;height:50px;resize: vertical;\">' + data + '</textarea>';
 			break;
 		case control_text:
 			//break;
@@ -721,7 +724,24 @@ function buildPaneElement(typeInfo, data, name, parent) {
 	return output + '</div>';
 }
 
-function popOutEffectElement() {
+function popOutThis(e) {
+	//Get the effect ID
+	var effectElement = e.target.parentNode;
+	var effectID;
+	for (var i = 0; i < effectElement.childNodes.length; i++) {
+		console.log(effectElement.childNodes[i]);
+		if (effectElement.childNodes[i].id) {
+			effectID = effectElement.childNodes[i].id.split('-');
+			effectElement.childNodes[i].disabled = 'disabled';
+			break;
+		}
+	}
+
+	newWindow({"caption": selectedEffect.id + '-&gt;' + effectID.join('-'), "icon": "icon.png", "width": 240, "height": 320, "resizeable": true, "form": '', "close": popOutCloseThis});
+}
+
+function popOutCloseThis(id) {
+	//document.getElementById('w' + id)
 }
 
 function init() {
@@ -743,7 +763,7 @@ function init() {
 	eventHook(document, "dragover", dndCancel);
 	eventHook(document, "dragenter", dndCancel);
 	setInterval(setTrayClock, 1000); setTrayClock(); //This needs improving. We can get the update tick in sync, copy what was done for offline planner
-	newDirView();
+	newEditorWindow();
 	//We need some way of registering windows onload, that'll let us add them to menus and stuff if they want to be placed on one.
 }
 
