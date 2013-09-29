@@ -40,10 +40,10 @@ var effectInfo = {
 		"type": "Render",
 		"pane": {
 			"code": {
-				"init": { label: "Init", control: control_code },
-				"perFrame": { label: "Per Frame", control: control_code },
+				"init": { label: "Init", control: control_code, "height": 30 },
+				"perFrame": { label: "Per Frame", control: control_code, "height": 60 },
 				"onBeat": { label: "On Beat", control: control_code },
-				"perPoint": { label: "Per Point", control: control_code }
+				"perPoint": { label: "Per Point", control: control_code, "height": 80 }
 			},
 			"source": { control: control_radio, "options": ["Waveform", "Spectrum"], "default": 0 },
 			"channel": { label: "Channel", control: control_radio, "options": ["Left", "Centre", "Right"], "default": 1 },
@@ -52,6 +52,19 @@ var effectInfo = {
 				"count": { label: "Cycle through", control: control_number },
 				"list": { label: "Colours (Max 16)", control: control_colour_bar}
 			}
+		}
+	},
+	"DynamicMovement": {
+		"name": "Dynamic Movement",
+		"type": "Trans",
+		"pane": {
+			"code": {
+				"init": { label: "Init", control: control_code, "height": 30 },
+				"perFrame": { label: "Per Frame", control: control_code, "height": 60 },
+				"onBeat": { label: "On Beat", control: control_code },
+				"perPixel": { label: "Per Pixel", control: control_code, "height": 80 }
+			},
+			"coord": { label: "Rectangular coordinates:", control: control_check, "default": false }
 		}
 	}
 };
@@ -73,8 +86,8 @@ var preset = {
                     "type": "SuperScope",
                     "code": {
                         "init": "n=800",
-                        "onBeat": "t=t+0.3;n=100+rand(900);",
                         "perFrame": "t=t-v*0.5",
+                        "onBeat": "t=t+0.3;n=100+rand(900);",
                         "perPoint": "d=D/n;r=(i-(t*3)); x=(atan(r+d-t)*cos(r+d-t+i)); y=((i+cos(d+v*1.2))-1.5)*1.7;z=-(cos(t+i)+log(v)*cos(r*3))*3;red=cos(r)+1;blue=sin(r);green=sin(i)/2"
                     },
 			  "style": 0,
@@ -91,8 +104,8 @@ var preset = {
                     "type": "SuperScope",
                     "code": {
                         "init": "n=800",
-                        "onBeat": "t=t+0.3;n=100+rand(900);",
                         "perFrame": "t=t-v*0.5",
+                        "onBeat": "t=t+0.3;n=100+rand(900);",
                         "perPoint": "d=D/n;r=(i-(t*3)); x=(atan(r+d-t)*cos(r+d-t+i)); y=((i+cos(d+v*1.2))-1.5)*1.7;z=-(cos(t+i)+log(v)*cos(r*3))*3;red=cos(r)+1;blue=sin(r);green=sin(i)/2"
                     }
                 },
@@ -100,7 +113,7 @@ var preset = {
                     "type": "DynamicMovement",
                     "enabled": true,
                     "code": "rollingGridley",
-                    "coord": "RECT"
+                    "coord": true
                 },
                 {
                     "type": "ChannelShift",
@@ -113,7 +126,7 @@ var preset = {
                     "type": "DynamicMovement",
                     "enabled": true,
                     "code": "rollingGridley",
-                    "coord": "RECT"
+                    "coord": true
                 },
                 {
                     "type": "ChannelShift",
@@ -649,7 +662,10 @@ function displayEffectView(e) {
 				}*/
 				//console.log(thisEffect.pane[i], node[i]);
 				//if (i == 'style') { console.log(thisEffect
-				if (!thisEffect.pane[i].control) {
+				if (!thisEffect.pane[i]) {
+					thisEffectHTML += 'Undefined effect element: ' + escape(i) + '<br />';
+				} else if (!thisEffect.pane[i].control) {
+					if (typeof node[i] == 'string') { thisEffectHTML += 'Error: "' + escape(i) + '" expects an array, string "' + escape(node[i]) + '" found.<br />'; continue; }
 					for (var k in node[i]) {
 						thisEffectHTML += buildPaneElement(thisEffect.pane[i][k], node[i][k], k, i);
 					}
@@ -676,7 +692,8 @@ function displayEffectView(e) {
 }*/
 
 function buildPaneElement(typeInfo, data, name, parent) {
-	if (typeof data == 'undefined' || !typeInfo.control) { return ''; }
+	if (!typeInfo && data) { return 'No type information provided for the given data: ' + data + '<br />'; } //Improve this check and its output
+	if (typeof data == 'undefined' || typeof typeInfo.control == 'undefined') { return ''; }
 	var thisID = (parent != '' ? parent + '-' : '') + name;
 	var output = '<div class="paneElementHost">'
 	if (typeInfo.label) {	output += "<div>" + typeInfo.label + "</div>"; }
@@ -685,7 +702,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			//
 			break;
 		case control_code:
-			output += '<div class="popOutLink" onclick="popOutThis(event);">\u2197</div><textarea id="' + thisID + '" style=\"width:100%;height:50px;resize: vertical;\">' + data + '</textarea>';
+			output += '<div class="popOutLink" onclick="popOutThis(event);">\u2197</div><textarea id="' + thisID + '" style=\"width:100%;height:' + (typeInfo.height ? typeInfo.height : 50) + 'px;resize: vertical;\">' + data + '</textarea>';
 			break;
 		case control_text:
 			//break;
@@ -697,7 +714,8 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			}
 			break;
 		case control_check:
-			//break;
+			output += '<input type="checkbox" name="' + thisID + '"' + (data ? ' checked' : '') + '/>';
+			break;
 		case control_colour:
 			//break;
 		case control_colour_bar:
