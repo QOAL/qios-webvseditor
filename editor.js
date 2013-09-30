@@ -618,7 +618,13 @@ function recursiveTreePopulate(branch, parent, id) {
 		//console.log(i, branch[i]);
 		var newEffect = document.createElement('div');
 		newEffect.id = id + '-' + i;
-		newEffect.innerHTML = branch[i].type;
+		var treeName = '';
+		if (typeof effectInfo[branch[i].type] != 'undefined') {
+			treeName = effectInfo[branch[i].type].type + ' / ' + effectInfo[branch[i].type].name;
+		} else {
+			treeName = effectInfo.unknown.name;
+		}
+		newEffect.innerHTML = treeName;
 		eventHook(newEffect, 'click', displayEffectView);
 		parent.appendChild(newEffect);
 
