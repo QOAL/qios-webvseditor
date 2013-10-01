@@ -46,7 +46,7 @@ var effectInfo = {
 				"perPoint": { label: "Per Point", control: control_code, "height": 80 }
 			},
 			"source": { control: control_radio, "options": ["Waveform", "Spectrum"], "default": 0 },
-			"channel": { label: "Channel", control: control_radio, "options": ["Left", "Centre", "Right"], "default": 1 },
+			"channel": { label: "Channel:", control: control_radio, "options": ["Left", "Centre", "Right"], "default": 1 },
 			"style": { label: "Draw as:", control: control_radio, "options": ["Dots", "Lines"], "default": 1},
 			"colour": {
 				"count": { label: "Cycle through", control: control_number },
@@ -170,6 +170,10 @@ function eventHook(ele, event, func, remove) {
 			ele.addEventListener(event, func, false);
 		}
 	}
+}
+
+function lameHTMLSpecialChars(str) {
+	return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 function fadeOut(ele, st) {
@@ -465,7 +469,6 @@ function startWindowResize(e) {
 }
 
 function newWindow(info) {
-//NEED TO SORT OUT THE IDs GIVEN TO ELEMENTS, LOTS ARE STARTING WITH A NUMBER WHICH IS NOT VALID.
 	/*name
 	caption
 	icon
@@ -542,7 +545,11 @@ function buildEditor(wID) {
 function newEditorWindow() {
 	//Need to make sure there is only one of these at a time!
 	//newWindow({"caption": "WebVS Editor", "icon": "brush_light_icon.png", "width": 640, "height": 480, "resizeable": true, "init": function() { buildEditor(this.wID)}});
-	newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": '<div class="winnav"><!--<input type="button" value="&#9650;" title="Up" /><input type="text" /><input type="button" value="&#9654;" title="Go" />--><input type="button" value="Hello"/></div><div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - "/><input type="button" value=" + "/><input type="button" value="x2"/></div><div id="editorTree"></div></div><div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div><div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>', "init": buildEditorTree});
+	var editorMarkup = '<div class="winnav"><!--<input type="button" value="&#9650;" title="Up" /><input type="text" /><input type="button" value="&#9654;" title="Go" />--><input type="button" value="Hello"/></div>' +
+				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - "/><input type="button" value=" + "/><input type="button" value="x2"/></div><div id="editorTree"></div></div>' +
+				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
+				'<div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
+	newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree});
 }
 
 function toggleTaskMenu(e) {
@@ -622,9 +629,9 @@ function recursiveTreePopulate(branch, parent, id) {
 		if (typeof effectInfo[branch[i].type] != 'undefined') {
 			treeName = effectInfo[branch[i].type].type + ' / ' + effectInfo[branch[i].type].name;
 		} else {
-			treeName = effectInfo.unknown.name;
+			treeName = effectInfo.unknown.name + ' (' + branch[i].type + ')';
 		}
-		newEffect.innerHTML = treeName;
+		newEffect.innerHTML = lameHTMLSpecialChars(treeName);
 		eventHook(newEffect, 'click', displayEffectView);
 		parent.appendChild(newEffect);
 
@@ -659,24 +666,14 @@ function displayEffectView(e) {
 		if (thisEffect.name == 'Unknown') {
 			thisEffectHTML = JSON.stringify(node);
 		} else {
-			for (var i in node) {
-				if (i == 'type') { continue; }
-				/*if (typeof i == 'object' && thisEffect[i]) {
-					recursivePaneBuild(thisEffect[i], node[i], thisEffectHTML);
-				} else {
-					thisEffectHTML += i + ":" + node[i] + "<br />";
-				}*/
-				//console.log(thisEffect.pane[i], node[i]);
-				//if (i == 'style') { console.log(thisEffect
-				if (!thisEffect.pane[i]) {
-					thisEffectHTML += 'Undefined effect element: ' + escape(i) + '<br />';
-				} else if (!thisEffect.pane[i].control) {
-					if (typeof node[i] == 'string') { thisEffectHTML += 'Error: "' + escape(i) + '" expects an array, string "' + escape(node[i]) + '" found.<br />'; continue; }
-					for (var k in node[i]) {
-						thisEffectHTML += buildPaneElement(thisEffect.pane[i][k], node[i][k], k, i);
+			for (var i in thisEffect.pane) {
+				for (var k in thisEffect.pane[i]) { //Try an iterate through this pane element
+					if (typeof thisEffect.pane[i][k] == 'object') { //If it has children handle them
+						thisEffectHTML += buildPaneElement(thisEffect.pane[i][k], node[i] && node[i][k] ? node[i][k] : '', k, i);
+					} else { //This is something without children so break the element loop
+						thisEffectHTML += buildPaneElement(thisEffect.pane[i], node[i] ? node[i] : '', i, '');
+						break;
 					}
-				} else {
-					thisEffectHTML += buildPaneElement(thisEffect.pane[i], node[i], i, '');
 				}
 			}
 		}
