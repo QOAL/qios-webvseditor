@@ -10,6 +10,8 @@ var area;
 var selectedEffect = null;
 var reorderEffect = null, tmpEffect = null, dummyEffect = null, blockEffectMove = false, currentEffectOrder = [];
 
+var poppedOut = [];
+
 /*
 	Look at using flexbox for layout
 */
@@ -536,6 +538,8 @@ function newWindow(info) {
 	eventHook(newItem, 'click', showthis);
 	newItem.innerHTML = '<div class="titlebarIcon" style="background-image: url(' + windows[wID].icon + ')"></div>' + windows[wID].caption;
 	document.getElementById("appholder").appendChild(newItem);
+
+	return wID; //might be useful
 }
 
 function buildEditor(wID) {
@@ -648,6 +652,7 @@ function displayEffectView(e) {
 	if (e.stopPropagation) e.stopPropagation();
 
 	if (selectedEffect) { //remove selected state from the current element
+		if (selectedEffect == e.target) { return; } //No point building the pane again in this case.
 		selectedEffect.setAttribute('class', selectedEffect.getAttribute('class') != '' ? selectedEffect.getAttribute('class').split(' ')[0] : '');
 	}
 
@@ -678,6 +683,7 @@ function displayEffectView(e) {
 			}
 		}
 		document.getElementById('effectContainer').innerHTML = thisEffectHTML;
+		document.getElementById('effectContainer').scrollTop = 0;
 		document.getElementById('effectTitle').innerHTML = thisEffect.name;
 	}
 	selectedEffect = e.target; //add the selected state to the chosen element
@@ -695,7 +701,6 @@ function displayEffectView(e) {
 }*/
 
 function buildPaneElement(typeInfo, data, name, parent) {
-	if (!typeInfo && data) { return 'No type information provided for the given data: ' + data + '<br />'; } //Improve this check and its output
 	if (typeof data == 'undefined' || typeof typeInfo.control == 'undefined') { return ''; }
 	var thisID = (parent != '' ? parent + '-' : '') + name;
 	var output = '<div class="paneElementHost">'
@@ -705,7 +710,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			//
 			break;
 		case control_code:
-			output += '<div class="popOutLink" onclick="popOutThis(event);">\u2197</div><textarea id="' + thisID + '" style=\"width:100%;height:' + (typeInfo.height ? typeInfo.height : 50) + 'px;resize: vertical;\">' + data + '</textarea>';
+			output += '<div class="popOutLink" onclick="popOutThis(event);">\u2197</div><textarea id="' + thisID + '" style="width:100%;height:' + (typeInfo.height ? typeInfo.height : '50') + 'px;resize:vertical;" onchange="updatePreset(event)">' + data + '</textarea>';
 			break;
 		case control_text:
 			//break;
@@ -750,19 +755,56 @@ function popOutThis(e) {
 	var effectElement = e.target.parentNode;
 	var effectID;
 	for (var i = 0; i < effectElement.childNodes.length; i++) {
-		//console.log(effectElement.childNodes[i]);
 		if (effectElement.childNodes[i].id) {
 			effectID = effectElement.childNodes[i].id.split('-');
-			effectElement.childNodes[i].disabled = 'disabled';
 			break;
 		}
 	}
 
-	newWindow({"caption": selectedEffect.id + '-&gt;' + effectID.join('-'), "icon": "icon.png", "width": 240, "height": 320, "resizeable": true, "form": '', "close": popOutCloseThis});
+	var popID = selectedEffect.id + '_' + effectID.join('-');
+
+	if (poppedOut.indexOf(popID) != -1) {
+		return; //This element has already been popped out. We should not hit this.
+	}
+	poppedOut.push(popID);
+	e.target.style.display = "none";
+	effectElement.childNodes[i].disabled = 'disabled';
+
+	var treePos = selectedEffect.id.substr(3).split('-');
+	var node = preset.components[treePos[0]];
+	if (treePos.length > 1) {
+		for (var i = 1; i < treePos.length; i++) {
+			node = node.components[treePos[i]];
+		}
+	}
+	var thisEffect = effectInfo[node.type];
+	var effectElement = thisEffect.pane;
+	var effectData = node;
+	for (var i = 0; i < effectID.length; i++) {
+		effectElement = effectElement[effectID[i]];
+		effectData = effectData[effectID[i]];
+	}
+//<textarea id="' + thisID + '" style="width:100%;height:' + (typeInfo.height ? typeInfo.height : '50') + 'px;resize:vertical;" onchange="updatePreset(event)">' + data + '</textarea>
+	var wID = newWindow({"caption": selectedEffect.textContent + ' &gt; ' + e.target.parentNode.childNodes[0].textContent, "icon": "icon.png", "width": 320, "height": 320, "resizeable": true, "form": buildPaneElement(effectElement, effectData ? effectData : '', popID, 'popout', true), "close": popOutCloseThis});
+	windows[wID].popID = [selectedEffect.id, effectID];
 }
 
 function popOutCloseThis(id) {
-	//document.getElementById('w' + id)
+	//Remove it from the popped out list
+	poppedOut[poppedOut.indexOf(windows[id].popID[0] + '_' + windows[id].popID[1].join('-'))] = null;
+
+	//If we're on the pane where this element belongs then:
+	var tmpID = windows[id].popID[1].join('-');
+	if (selectedEffect.id == windows[id].popID[0] && document.getElementById(tmpID)) {
+		document.getElementById(tmpID).disabled = ''; //Re-enable the textarea
+		document.getElementById(tmpID).parentNode.childNodes[1].style.display = ''; //Show the popout link again
+	}
+	
+}
+
+function updatePreset(e) {
+	//
+	console.log(e.target.id);
 }
 
 function init() {

@@ -601,3 +601,9 @@ textarea {
 input[type=text]:hover, textarea:hover {
 	border: 1px #a8a8a8 solid;
 }
+
+textarea[disabled] {
+	background: #f4f4f4;
+	color: #404040;
+	border-color: #d0d0d0;
+}
