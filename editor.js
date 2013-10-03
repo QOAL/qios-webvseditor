@@ -37,6 +37,15 @@ var effectInfo = {
 		"name": "Unknown",
 		"type": ""
 	},
+	"main": {
+		"name": "Main",
+		"type": "",
+		"pane": {
+			"clearFrame": { label: "Clear every frame:", control: control_check, "default": false},
+			"name": { label: "Preset name:", control: control_text },
+			"author": { label: "Author:", control: control_text }
+		}
+	},
 	"SuperScope": {
 		"name": "SuperScope",
 		"type": "Render",
@@ -769,7 +778,7 @@ function buildEditorTree() {
 
 	if (selectedEffect && typeof selectedEffect == "string") {
 		selectedEffect = document.getElementById(selectedEffect);
-		selectedEffect.setAttribute('class', 'selectedEffect');
+		selectedEffect.setAttribute('class', (selectedEffect.getAttribute('class') && selectedEffect.getAttribute('class').indexOf('effectTree') != -1 ? 'effectTree ' : '') + 'selectedEffect');
 	}
 }
 
@@ -802,12 +811,16 @@ function displayEffectView(e) {
 
 	if (selectedEffect) { //remove selected state from the current element
 		if (selectedEffect == e.target) { return; } //No point building the pane again in this case.
-		selectedEffect.setAttribute('class', '');
+		selectedEffect.setAttribute('class', selectedEffect.getAttribute('class') && selectedEffect.getAttribute('class').indexOf('effectTree') != -1 ? 'effectTree' : '');
 	}
 
 	var treePos = e.target.id.substr(3).split("-");
+	var thisEffectHTML = '';
 	if (treePos == 'Main') {
-		document.getElementById('effectContainer').innerHTML = 'Main';
+		var thisEffect = effectInfo.main;
+		for (var i in thisEffect.pane) {
+			thisEffectHTML += buildPaneElement(thisEffect.pane[i], preset.components[i] ? preset.components[i] : (preset[i] ? preset[i] : ''), i, '');
+		}
 	} else {
 		var node = preset.components.components[treePos[0]];
 		if (treePos.length > 1) {
@@ -816,7 +829,6 @@ function displayEffectView(e) {
 			}
 		}
 		var thisEffect = typeof effectInfo[node.type] != 'undefined' ? effectInfo[node.type] : effectInfo.unknown;
-		var thisEffectHTML = '';
 		if (thisEffect.name == 'Unknown') {
 			thisEffectHTML = JSON.stringify(node);
 		} else {
@@ -824,12 +836,13 @@ function displayEffectView(e) {
 				thisEffectHTML += buildPaneElement(thisEffect.pane[i], node[i] ? node[i] : '', i, '');
 			}
 		}
-		document.getElementById('effectContainer').innerHTML = thisEffectHTML;
-		document.getElementById('effectContainer').scrollTop = 0;
-		document.getElementById('effectTitle').innerHTML = thisEffect.name;
 	}
+	document.getElementById('effectContainer').scrollTop = 0;
+	document.getElementById('effectContainer').innerHTML = thisEffectHTML;
+	document.getElementById('effectTitle').innerHTML = thisEffect.name;
+
 	selectedEffect = e.target; //add the selected state to the chosen element
-	selectedEffect.setAttribute('class', 'selectedEffect');
+	selectedEffect.setAttribute('class', (selectedEffect.getAttribute('class') && selectedEffect.getAttribute('class').indexOf('effectTree') != -1 ? 'effectTree ' : '') + 'selectedEffect');
 }
 
 /*function recursivePaneBuild(effect, node, output) {
@@ -846,7 +859,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 	if (typeof data == 'undefined' || typeof typeInfo.control == 'undefined') { return ''; }
 	var thisID = (parent != '' ? parent + '-' : '') + name;
 	var output = '<div class="paneElementHost">'
-	if (typeInfo.label) {	output += "<div>" + typeInfo.label + "</div>"; }
+	if (typeInfo.label) {	output += "<div" + (typeInfo.control != control_code ? ' style="display:inline;margin-right:5px;" ' : '') + ">" + typeInfo.label + "</div>"; }
 	switch (typeInfo.control) {
 		case control_null:
 			//
@@ -855,6 +868,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			output += '<div class="popOutLink" onclick="popOutThis(event);">\u2197</div><textarea id="' + thisID + '" style="width:100%;height:' + (typeInfo.height ? typeInfo.height : '50') + 'px;resize:vertical;" onchange="updatePreset(event)">' + data + '</textarea>';
 			break;
 		case control_text:
+			output += '<input id="' + thisID + '" type="text" value="' + data + '"/>';
 			//break;
 		case control_number:
 			//break;
