@@ -868,7 +868,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			output += '<div class="popOutLink" onclick="popOutThis(event);">\u2197</div><textarea id="' + thisID + '" style="width:100%;height:' + (typeInfo.height ? typeInfo.height : '50') + 'px;resize:vertical;" onchange="updatePreset(event)">' + data + '</textarea>';
 			break;
 		case control_text:
-			output += '<input id="' + thisID + '" type="text" value="' + data + '"/>';
+			output += '<input id="' + thisID + '" type="text" onchange="updatePreset(event)" value="' + data + '"/>';
 			//break;
 		case control_number:
 			//break;
@@ -958,28 +958,37 @@ function popOutCloseThis(id) {
 }
 
 function updatePreset(e) {
+	var newValue = e.target.value;
 	if (e.target.id.indexOf('_') != -1) { //popped out element
 		var tmpID = e.target.id.split('_');
 		var tree = tmpID[0];
 		var effect = tmpID[1];
 		//We should update the pane view here, if it's visible.
 		if (selectedEffect.id == tree && document.getElementById(tmpID[1])) {
-			document.getElementById(tmpID[1]).value = e.target.value;
+			document.getElementById(tmpID[1]).value = newValue;
 		}
 	} else { //in a pane
 		var tree = selectedEffect.id;
 		var effect = e.target.id;
 	}
 
-	//Walk the tree
-	var treePos = tree.substr(3).split('-');
-	var node = preset.components.components[treePos[0]];
-	if (treePos.length > 1) {
-		for (var i = 1; i < treePos.length; i++) {
-			node = node.components[treePos[i]];
+	if (tree == "ET-Main") {
+		if (preset.components[effect]) {
+			preset.components[effect] = newValue;
+		} else {
+			preset[effect] = newValue;
 		}
+	} else {
+		//Walk the tree
+		var treePos = tree.substr(3).split('-');
+		var node = preset.components.components[treePos[0]];
+		if (treePos.length > 1) {
+			for (var i = 1; i < treePos.length; i++) {
+				node = node.components[treePos[i]];
+			}
+		}
+		node[effect] = newValue;
 	}
-	node[effect] = e.target.value;
 
 	//This is where webvs would be given the updated preset
 }
