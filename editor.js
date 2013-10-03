@@ -809,6 +809,8 @@ function displayEffectView(e) {
 	e.cancelBubble = true;
 	if (e.stopPropagation) e.stopPropagation();
 
+	if (e.layerY > 18 && e.target.getAttribute('class') && e.target.getAttribute('class').indexOf('effectTree') != -1) { return; }
+
 	if (selectedEffect) { //remove selected state from the current element
 		if (selectedEffect == e.target) { return; } //No point building the pane again in this case.
 		selectedEffect.setAttribute('class', selectedEffect.getAttribute('class') && selectedEffect.getAttribute('class').indexOf('effectTree') != -1 ? 'effectTree' : '');
