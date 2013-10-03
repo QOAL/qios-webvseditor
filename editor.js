@@ -14,6 +14,13 @@ var poppedOut = [];
 
 /*
 	Look at using flexbox for layout
+
+	Remember to change "load example" to load preset, where the user can have their own presets for effects
+	Also need to add the expression help window
+
+	Oh yeah, this editor should have language support I guess
+
+	It would be cool to have a little icon for each element type.
 */
 
 //Enumerate some stuff
@@ -719,8 +726,8 @@ function buildEditor(wID) {
 function newEditorWindow() {
 	//Need to make sure there is only one of these at a time!
 	//newWindow({"caption": "WebVS Editor", "icon": "brush_light_icon.png", "width": 640, "height": 480, "resizeable": true, "init": function() { buildEditor(this.wID)}});
-	var editorMarkup = '<div class="winnav"><!--<input type="button" value="&#9650;" title="Up" /><input type="text" /><input type="button" value="&#9654;" title="Go" />--><input type="button" value="Hello"/></div>' +
-				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - "/><input type="button" value=" + "/><input type="button" value="x2"/></div><div id="editorTree"></div></div>' +
+	var editorMarkup = '<div class="winnav"><input type="button" value="Hello"/></div>' +
+				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - "/><input type="button" value=" + "/><input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"></div></div>' +
 				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
 				'<div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
 	newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree});
@@ -967,6 +974,25 @@ function selectFromPopout(e) {
 	var evt = document.createEvent("MouseEvents");
 	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 	document.getElementById(targetEffect).dispatchEvent(evt);
+}
+
+function duplicatedSelected() {
+	if (!selectedEffect || selectedEffect.id == 'ET-Main') { return; }
+
+	var treePos = selectedEffect.id.substr(3).split('-');
+	var node = preset.components.components[treePos[0]];
+	if (treePos.length > 1) {
+		for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
+			node = node.components[treePos[i]];
+		}
+		node.components.splice(Math.max(0, treePos[i]), 0, node.components[treePos[i]]);
+	} else { //This is a root element
+		preset.components.components.splice(Math.max(0, treePos[0]), 0, node);
+	}
+
+	buildEditorTree();
+
+	//This is where webvs would be given the updated preset
 }
 
 function updatePreset(e) {
