@@ -37,7 +37,7 @@ var effectInfo = {
 		"name": "Unknown",
 		"type": ""
 	},
-	"main": {
+	"Main": {
 		"name": "Main",
 		"type": "",
 		"pane": {
@@ -45,6 +45,11 @@ var effectInfo = {
 			"name": { label: "Preset name:", control: control_text },
 			"author": { label: "Author:", control: control_text }
 		}
+	},
+	"Comment": {
+		"name": "Comment",
+		"type": "Misc"
+		/* We currently need to handle this specially */
 	},
 	"SuperScope": {
 		"name": "SuperScope",
@@ -84,7 +89,7 @@ var preset = {
 		"components": [
 			{
 				"type": "Comment",
-				"text": ":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\r\n:::::::::::::::::::::		   Tachyon Based Data Bus			   :::::::::::::::::::::\r\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\r\n\r\n... or 'Just Another Tunnel II'? Well, 'Just Another Tunnel' was the most popular preset in my last pack so I've tried to come up with another unique tunnel preset of a similar nature yet different.\r\n\r\nThe idea behind the fictional tachyon based technology (yes I stole a word from Star Trek) is that you can make a computer processor, motherboard, graphics card... etc, that send messages down tachyon buses back in time to when they are needed, the same principle that is used in 'Bill and Ted's Most Excellent Adventure' (what a classic film), the point is that you can leave your computer on overnight doing the calculations and crap that it needed to do its work for the day. I tried to make the fog in the tunnel echo this by doing the 'still drawing what was there before' effect whilst trying not to let the tunnel itself contribute to much to the fog effect, the glowing border to the fog makes it look a bit like the tunnel is being created ahead of the camera.\r\n\r\nThe cool thing about this style of tunnel in my opinion is the way that it passes as a square tunnel and doesn't have the glitchy edges. The finishing touch was the blended color map. you can remove this by deleting the Misc/Buffer Save, Trans/Color Map and Trans/Dynamic Movement at the bottom of the preset. I get about 3 fps more this way.\r\n\r\nFor a 'Just Another Tunnel - NicMix' style version of this preset find this line in the topmost DM: k=min(k,k2); and replace it with k=max(k,k2);. For another interesting tunnel try this\r\n\r\nk=sqr(2*x1)+sqr(sqr(y1));\r\nk=sqrt(k)/k;\r\nk2=sqr(2*y1)+sqr(sqr(0.5*x1));\r\nk2=sqrt(k2)/k2;\r\nk3=sqr(0.5*x1)+sqr(0.8*y1);\r\nk3=sqrt(k3)/k3;\r\nk=max(max(k,k2),k3);\r\n\r\nin place of\r\n\r\nk=sqr(2*x1)+sqr(sqr(y1));\r\nk=sqrt(k)/k;\r\nk2=sqr(2*y1)+sqr(sqr(0.5*x1));\r\nk2=sqrt(k2)/k2;\r\nk=min(k,k2);\r\n\r\n-- Jheriko\r\n\r\njheriko@ntlworld.com\r\n\r\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"
+				"text": ":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\r\n:::::::::::::::::::::           Tachyon Based Data Bus               :::::::::::::::::::::\r\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\r\n\r\n... or 'Just Another Tunnel II'? Well, 'Just Another Tunnel' was the most popular preset in my last pack so I've tried to come up with another unique tunnel preset of a similar nature yet different.\r\n\r\nThe idea behind the fictional tachyon based technology (yes I stole a word from Star Trek) is that you can make a computer processor, motherboard, graphics card... etc, that send messages down tachyon buses back in time to when they are needed, the same principle that is used in 'Bill and Ted's Most Excellent Adventure' (what a classic film), the point is that you can leave your computer on overnight doing the calculations and crap that it needed to do its work for the day. I tried to make the fog in the tunnel echo this by doing the 'still drawing what was there before' effect whilst trying not to let the tunnel itself contribute to much to the fog effect, the glowing border to the fog makes it look a bit like the tunnel is being created ahead of the camera.\r\n\r\nThe cool thing about this style of tunnel in my opinion is the way that it passes as a square tunnel and doesn't have the glitchy edges. The finishing touch was the blended color map. you can remove this by deleting the Misc/Buffer Save, Trans/Color Map and Trans/Dynamic Movement at the bottom of the preset. I get about 3 fps more this way.\r\n\r\nFor a 'Just Another Tunnel - NicMix' style version of this preset find this line in the topmost DM: k=min(k,k2); and replace it with k=max(k,k2);. For another interesting tunnel try this\r\n\r\nk=sqr(2*x1)+sqr(sqr(y1));\r\nk=sqrt(k)/k;\r\nk2=sqr(2*y1)+sqr(sqr(0.5*x1));\r\nk2=sqrt(k2)/k2;\r\nk3=sqr(0.5*x1)+sqr(0.8*y1);\r\nk3=sqrt(k3)/k3;\r\nk=max(max(k,k2),k3);\r\n\r\nin place of\r\n\r\nk=sqr(2*x1)+sqr(sqr(y1));\r\nk=sqrt(k)/k;\r\nk2=sqr(2*y1)+sqr(sqr(0.5*x1));\r\nk2=sqrt(k2)/k2;\r\nk=min(k,k2);\r\n\r\n-- Jheriko\r\n\r\njheriko@ntlworld.com\r\n\r\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"
 			},
 			{
 				"type": "EffectList",
@@ -756,18 +761,6 @@ function buildEditorTree() {
 
 	document.getElementById('editorTree').innerHTML = ''; //Clear the tree
 
-	//build a "Main" element
-	/*for (var i = 0; i < effectInfo.main; i++) {
-		
-	}*/
-
-	//populate "Main"
-	/*for (var i in preset) {
-		if (i != 'components') {
-		}
-	}*/
-
-	//
 	var newEffect = document.createElement('div');
 	newEffect.innerHTML = 'Main';
 	newEffect.id = "ET-Main";
@@ -819,7 +812,7 @@ function displayEffectView(e) {
 	var treePos = e.target.id.substr(3).split("-");
 	var thisEffectHTML = '';
 	if (treePos == 'Main') {
-		var thisEffect = effectInfo.main;
+		var thisEffect = effectInfo.Main;
 		for (var i in thisEffect.pane) {
 			thisEffectHTML += buildPaneElement(thisEffect.pane[i], preset.components[i] ? preset.components[i] : (preset[i] ? preset[i] : ''), i, '');
 		}
@@ -833,6 +826,9 @@ function displayEffectView(e) {
 		var thisEffect = typeof effectInfo[node.type] != 'undefined' ? effectInfo[node.type] : effectInfo.unknown;
 		if (thisEffect.name == 'Unknown') {
 			thisEffectHTML = JSON.stringify(node);
+		} else if (thisEffect.name == 'Comment') { //specialise the comment pane
+			var theComment = node.text ? node.text : '';
+			thisEffectHTML = '<textarea id="text" style="width:100%;resize:none;font-family:arial;font-size:11px;height:calc(100% - 6px);margin:0;" onchange="updatePreset(event)">' + theComment + '</textarea>';
 		} else {
 			for (var i in thisEffect.pane) {
 				thisEffectHTML += buildPaneElement(thisEffect.pane[i], node[i] ? node[i] : '', i, '');
