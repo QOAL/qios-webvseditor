@@ -769,7 +769,7 @@ function buildEditorTree() {
 
 	if (selectedEffect && typeof selectedEffect == "string") {
 		selectedEffect = document.getElementById(selectedEffect);
-		selectedEffect.setAttribute('class', selectedEffect.getAttribute('class') + ' selectedEffect');
+		selectedEffect.setAttribute('class', 'selectedEffect');
 	}
 }
 
@@ -802,7 +802,7 @@ function displayEffectView(e) {
 
 	if (selectedEffect) { //remove selected state from the current element
 		if (selectedEffect == e.target) { return; } //No point building the pane again in this case.
-		selectedEffect.setAttribute('class', selectedEffect.getAttribute('class') != '' ? selectedEffect.getAttribute('class').split(' ')[0] : '');
+		selectedEffect.setAttribute('class', '');
 	}
 
 	var treePos = e.target.id.substr(3).split("-");
@@ -829,7 +829,7 @@ function displayEffectView(e) {
 		document.getElementById('effectTitle').innerHTML = thisEffect.name;
 	}
 	selectedEffect = e.target; //add the selected state to the chosen element
-	selectedEffect.setAttribute('class', selectedEffect.getAttribute('class') + ' selectedEffect');
+	selectedEffect.setAttribute('class', 'selectedEffect');
 }
 
 /*function recursivePaneBuild(effect, node, output) {
@@ -943,11 +943,16 @@ function popOutCloseThis(id) {
 
 function updatePreset(e) {
 	if (e.target.id.indexOf('_') != -1) { //popped out element
-		var tmpID = e.target.id;
+		var tmpID = e.target.id.split('_');
 		var tree = tmpID[0];
+		var effect = tmpID[1];
 		//We should update the pane view here, if it's visible.
+		if (selectedEffect.id == tree && document.getElementById(tmpID[1])) {
+			document.getElementById(tmpID[1]).value = e.target.value;
+		}
 	} else { //in a pane
 		var tree = selectedEffect.id;
+		var effect = e.target.id;
 	}
 
 	//Walk the tree
@@ -958,13 +963,9 @@ function updatePreset(e) {
 			node = node.components[treePos[i]];
 		}
 	}
-	var thisEffect = effectInfo[node.type];
-	var effectData = node;
-	for (var i = 0; i < effectID.length; i++) {
-		effectData = effectData[effectID[i]];
-	}
+	node[effect] = e.target.value;
 
-	console.log(e.target.id);
+	//This is where webvs would be given the updated preset
 }
 
 function init() {
