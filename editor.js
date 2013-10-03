@@ -41,7 +41,7 @@ var effectInfo = {
 		"name": "Main",
 		"type": "",
 		"pane": {
-			"clearFrame": { label: "Clear every frame:", control: control_check, "default": false},
+			"clearFrame": { label: "Clear every frame:", control: control_check, "default": false },
 			"name": { label: "Preset name:", control: control_text },
 			"author": { label: "Author:", control: control_text }
 		}
@@ -50,6 +50,13 @@ var effectInfo = {
 		"name": "Comment",
 		"type": "Misc"
 		/* We currently need to handle this specially */
+	},
+	"EffectList": {
+		"name": "Effect List",
+		"type": "",
+		"pane": {
+			"enabled": { label: "Enabled:", control: control_check, "default": true },
+		}
 	},
 	"SuperScope": {
 		"name": "SuperScope",
@@ -782,7 +789,7 @@ function recursiveTreePopulate(branch, parent, id) {
 		newEffect.id = id + '-' + i;
 		var treeName = '';
 		if (typeof effectInfo[branch[i].type] != 'undefined') {
-			treeName = effectInfo[branch[i].type].type + ' / ' + effectInfo[branch[i].type].name;
+			treeName = (effectInfo[branch[i].type].type != "" ? effectInfo[branch[i].type].type + ' / ' : '') + effectInfo[branch[i].type].name;
 		} else {
 			treeName = effectInfo.unknown.name + ' (' + branch[i].type + ')';
 		}
@@ -926,18 +933,18 @@ function popOutThis(e) {
 
 	var treePos = selectedEffect.id.substr(3).split('-');
 	var node = preset.components.components[treePos[0]];
-	var treeTrail = node.type; //Build a string to give the user an idea of where this element belongs.
+	var treeTrail = effectInfo[node.type].name; //Build a string to give the user an idea of where this element belongs.
 	if (treePos.length > 1) {
 		for (var i = 1; i < treePos.length; i++) {
 			node = node.components[treePos[i]];
-			treeTrail += ' &gt; ' + node.type;
+			treeTrail += ' &gt; ' + effectInfo[node.type].name;
 		}
 	}
 
 	var effectElement = effectInfo[node.type].pane[effectID];
 	var effectData = node[effectID];
 
-	var popoutMarkup = '<div class="popoutHost"><textarea class="popoutElement" id="' + popID + '" onchange="updatePreset(event)" wrap="off">' + (effectData ? effectData : '') + '</textarea><div class="popoutStatusBar">' + treeTrail + '</div></div>';
+	var popoutMarkup = '<div class="popoutHost"><textarea class="popoutElement" id="' + popID + '" onchange="updatePreset(event)" wrap="off">' + (effectData ? effectData : '') + '</textarea><div class="popoutStatusBar" onclick="selectFromPopout(event)" title="Click to select this effect in the editor">' + treeTrail + '</div></div>';
 	var wID = newWindow({"caption": selectedEffect.textContent + ' &gt; ' + e.target.parentNode.childNodes[0].textContent, "icon": "icon.png", "width": 320, "height": 320, "resizeable": true, "form": popoutMarkup, "close": popOutCloseThis});
 	windows[wID].popID = [selectedEffect.id, effectID];
 }
@@ -953,6 +960,13 @@ function popOutCloseThis(id) {
 		document.getElementById(tmpID).parentNode.childNodes[1].style.display = ''; //Show the popout link again
 	}
 	
+}
+
+function selectFromPopout(e) {
+	var targetEffect = e.target.parentNode.childNodes[0].id.split('_')[0];
+	var evt = document.createEvent("MouseEvents");
+	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+	document.getElementById(targetEffect).dispatchEvent(evt);
 }
 
 function updatePreset(e) {
