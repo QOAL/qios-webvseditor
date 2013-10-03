@@ -928,17 +928,19 @@ function popOutThis(e) {
 
 	var treePos = selectedEffect.id.substr(3).split('-');
 	var node = preset.components.components[treePos[0]];
+	var treeTrail = node.type; //Build a string to give the user an idea of where this element belongs.
 	if (treePos.length > 1) {
 		for (var i = 1; i < treePos.length; i++) {
 			node = node.components[treePos[i]];
+			treeTrail += ' &gt; ' + node.type;
 		}
 	}
 
 	var effectElement = effectInfo[node.type].pane[effectID];
 	var effectData = node[effectID];
 
-//<textarea id="' + thisID + '" style="width:100%;height:' + (typeInfo.height ? typeInfo.height : '50') + 'px;resize:vertical;" onchange="updatePreset(event)">' + data + '</textarea>
-	var wID = newWindow({"caption": selectedEffect.textContent + ' &gt; ' + e.target.parentNode.childNodes[0].textContent, "icon": "icon.png", "width": 320, "height": 320, "resizeable": true, "form": buildPaneElement(effectElement, effectData ? effectData : '', popID, '', true), "close": popOutCloseThis});
+	var popoutMarkup = '<div class="popoutHost"><textarea class="popoutElement" id="' + popID + '" onchange="updatePreset(event)" wrap="off">' + (effectData ? effectData : '') + '</textarea><div class="popoutStatusBar">' + treeTrail + '</div></div>';
+	var wID = newWindow({"caption": selectedEffect.textContent + ' &gt; ' + e.target.parentNode.childNodes[0].textContent, "icon": "icon.png", "width": 320, "height": 320, "resizeable": true, "form": popoutMarkup, "close": popOutCloseThis});
 	windows[wID].popID = [selectedEffect.id, effectID];
 }
 
