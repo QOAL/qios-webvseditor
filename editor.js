@@ -35,21 +35,19 @@ var control_label = 0xB;
 var effectInfo = {
 	"unknown": {
 		"name": "Unknown",
-		"type": null
+		"type": ""
 	},
 	"SuperScope": {
 		"name": "SuperScope",
 		"type": "Render",
 		"pane": {
-			"code": {
-				"init": { label: "Init", control: control_code, "height": 30 },
-				"perFrame": { label: "Per Frame", control: control_code, "height": 60 },
-				"onBeat": { label: "On Beat", control: control_code },
-				"perPoint": { label: "Per Point", control: control_code, "height": 80 }
-			},
+			"init": { label: "Init", control: control_code, "height": 30 },
+			"frame": { label: "Per Frame", control: control_code, "height": 60 },
+			"beat": { label: "On Beat", control: control_code },
+			"point": { label: "Per Point", control: control_code, "height": 80 },
 			"source": { control: control_radio, "options": ["Waveform", "Spectrum"], "default": 0 },
-			"channel": { label: "Channel:", control: control_radio, "options": ["Left", "Centre", "Right"], "default": 1 },
-			"style": { label: "Draw as:", control: control_radio, "options": ["Dots", "Lines"], "default": 1},
+			"audioChannel": { label: "Channel:", control: control_radio, "options": ["Left", "Centre", "Right"], "default": 1 },
+			"lineType": { label: "Draw as:", control: control_radio, "options": ["Dots", "Lines"], "default": 1},
 			"colour": {
 				"count": { label: "Cycle through", control: control_number },
 				"list": { label: "Colours (Max 16)", control: control_colour_bar}
@@ -60,96 +58,247 @@ var effectInfo = {
 		"name": "Dynamic Movement",
 		"type": "Trans",
 		"pane": {
-			"code": {
-				"init": { label: "Init", control: control_code, "height": 30 },
-				"perFrame": { label: "Per Frame", control: control_code, "height": 60 },
-				"onBeat": { label: "On Beat", control: control_code },
-				"perPixel": { label: "Per Pixel", control: control_code, "height": 80 }
-			},
-			"coord": { label: "Rectangular coordinates:", control: control_check, "default": false }
+			"init": { label: "Init", control: control_code, "height": 30 },
+			"frame": { label: "Per Frame", control: control_code, "height": 60 },
+			"beat": { label: "On Beat", control: control_code },
+			"point": { label: "Per Pixel", control: control_code, "height": 80 },
+			"coordinates": { label: "Rectangular coordinates:", control: control_check, "default": false }
 		}
 	}
 };
 
 var preset = {
-    "name" : "Science of Superscope",
-    "author" : "Marco",
-    "clearFrame": false,
-    "components": [
-        {
-            "type": "EffectList",
-            "output": "ADDITIVE",
-            "components": [
-                {
-                    "type": "FadeOut",
-                    "speed": 0.4
-                },
-                {
-                    "type": "SuperScope",
-                    "code": {
-                        "init": "n=800",
-                        "perFrame": "t=t-v*0.5",
-                        "onBeat": "t=t+0.3;n=100+rand(900);",
-                        "perPoint": "d=D/n;r=(i-(t*3)); x=(atan(r+d-t)*cos(r+d-t+i)); y=((i+cos(d+v*1.2))-1.5)*1.7;z=-(cos(t+i)+log(v)*cos(r*3))*3;red=cos(r)+1;blue=sin(r);green=sin(i)/2"
-                    },
-			  "style": 0,
-                },
-		            {
-            "type": "EffectList",
-            "output": "ADDITIVE",
-            "components": [
-                {
-                    "type": "FadeOut",
-                    "speed": 0.4
-                },
-                {
-                    "type": "SuperScope",
-                    "code": {
-                        "init": "n=800",
-                        "perFrame": "t=t-v*0.5",
-                        "onBeat": "t=t+0.3;n=100+rand(900);",
-                        "perPoint": "d=D/n;r=(i-(t*3)); x=(atan(r+d-t)*cos(r+d-t+i)); y=((i+cos(d+v*1.2))-1.5)*1.7;z=-(cos(t+i)+log(v)*cos(r*3))*3;red=cos(r)+1;blue=sin(r);green=sin(i)/2"
-                    }
-                },
-                {
-                    "type": "DynamicMovement",
-                    "enabled": true,
-                    "code": "rollingGridley",
-                    "coord": true
-                },
-                {
-                    "type": "ChannelShift",
-                    "enabled": false,
-                    "onBeatRandom": true
-                }
-            ]
-        },
-                {
-                    "type": "DynamicMovement",
-                    "enabled": true,
-                    "code": "rollingGridley",
-                    "coord": true
-                },
-                {
-                    "type": "ChannelShift",
-                    "enabled": false,
-                    "onBeatRandom": true
-                }
-            ]
-        },
-        {
-            "type": "Convolution",
-            "kernel": "blur"
-        },
-        {
-            "type": "Convolution",
-            "kernel": "blur"
-        },
-        {
-            "type": "OnBeatClear"
-        }
-    ]
-};
+	"name": "141 - Tachyon Based Data Bus",
+	"author": "Jheriko",
+	"components": {
+		"clearFrame": 0,
+		"components": [
+			{
+				"type": "Comment",
+				"text": ":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\r\n:::::::::::::::::::::		   Tachyon Based Data Bus			   :::::::::::::::::::::\r\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\r\n\r\n... or 'Just Another Tunnel II'? Well, 'Just Another Tunnel' was the most popular preset in my last pack so I've tried to come up with another unique tunnel preset of a similar nature yet different.\r\n\r\nThe idea behind the fictional tachyon based technology (yes I stole a word from Star Trek) is that you can make a computer processor, motherboard, graphics card... etc, that send messages down tachyon buses back in time to when they are needed, the same principle that is used in 'Bill and Ted's Most Excellent Adventure' (what a classic film), the point is that you can leave your computer on overnight doing the calculations and crap that it needed to do its work for the day. I tried to make the fog in the tunnel echo this by doing the 'still drawing what was there before' effect whilst trying not to let the tunnel itself contribute to much to the fog effect, the glowing border to the fog makes it look a bit like the tunnel is being created ahead of the camera.\r\n\r\nThe cool thing about this style of tunnel in my opinion is the way that it passes as a square tunnel and doesn't have the glitchy edges. The finishing touch was the blended color map. you can remove this by deleting the Misc/Buffer Save, Trans/Color Map and Trans/Dynamic Movement at the bottom of the preset. I get about 3 fps more this way.\r\n\r\nFor a 'Just Another Tunnel - NicMix' style version of this preset find this line in the topmost DM: k=min(k,k2); and replace it with k=max(k,k2);. For another interesting tunnel try this\r\n\r\nk=sqr(2*x1)+sqr(sqr(y1));\r\nk=sqrt(k)/k;\r\nk2=sqr(2*y1)+sqr(sqr(0.5*x1));\r\nk2=sqrt(k2)/k2;\r\nk3=sqr(0.5*x1)+sqr(0.8*y1);\r\nk3=sqrt(k3)/k3;\r\nk=max(max(k,k2),k3);\r\n\r\nin place of\r\n\r\nk=sqr(2*x1)+sqr(sqr(y1));\r\nk=sqrt(k)/k;\r\nk2=sqr(2*y1)+sqr(sqr(0.5*x1));\r\nk2=sqrt(k2)/k2;\r\nk=min(k,k2);\r\n\r\n-- Jheriko\r\n\r\njheriko@ntlworld.com\r\n\r\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"
+			},
+			{
+				"type": "EffectList",
+				"enabled": true,
+				"clearFrame": false,
+				"input": "Ignore",
+				"output": "Ignore",
+				"inAdjustBlend": 128,
+				"outAdjustBlend": 128,
+				"inBuffer": 0,
+				"outBuffer": 0,
+				"inBufferInvert": false,
+				"outBufferInvert": false,
+				"enableOnBeat": false,
+				"onBeatFrames": 1,
+				"components": [
+					{
+						"type": "EffectList",
+						"enabled": true,
+						"clearFrame": false,
+						"input": "Ignore",
+						"output": "Replace",
+						"inAdjustBlend": 128,
+						"outAdjustBlend": 128,
+						"inBuffer": 0,
+						"outBuffer": 0,
+						"inBufferInvert": false,
+						"outBufferInvert": false,
+						"enableOnBeat": false,
+						"onBeatFrames": 1,
+						"components": [
+							{
+								"type": "FadeOut",
+								"speed": 2,
+								"color": "#000000"
+							},
+							{
+								"type": "SuperScope",
+								"enabled": true,
+								"point": "x=(xc-oldxc)*i+oldxc;\r\ny=(yc-oldyc)*i+oldyc;",
+								"frame": "q=-q;oldxc=xc;oldyc=yc;xc=oldxc+(q+1)*(rand(50)-25)/250;yc=oldyc+(q-1)*(rand(50)-25)/250;",
+								"beat": "xc=0;yc=0;oldxc=0;oldyc=0;",
+								"init": "n=2;q=1;",
+								"audioChannel": "Center",
+								"audioRepresent": "Waveform",
+								"colors": [
+									"#ffffff"
+								],
+								"lineType": "Lines"
+							},
+							{
+								"type": "SuperScope",
+								"enabled": true,
+								"point": "x=(xc-oldxc)*i+oldxc;\r\ny=(yc-oldyc)*i+oldyc;",
+								"frame": "q=-q;oldxc=xc;oldyc=yc;xc=oldxc+(q+1)*(rand(50)-25)/250;yc=oldyc+(q-1)*(rand(50)-25)/250;",
+								"beat": "xc=0;yc=0;oldxc=0;oldyc=0;",
+								"init": "n=2;q=1;",
+								"audioChannel": "Center",
+								"audioRepresent": "Waveform",
+								"colors": [
+									"#00ff00"
+								],
+								"lineType": "Lines"
+							},
+							{
+								"type": "SuperScope",
+								"enabled": true,
+								"point": "x=(xc-oldxc)*i+oldxc;\r\ny=(yc-oldyc)*i+oldyc;",
+								"frame": "q=-q;oldxc=xc;oldyc=yc;xc=oldxc+(q+1)*(rand(50)-25)/250;yc=oldyc+(q-1)*(rand(50)-25)/250;",
+								"beat": "xc=0;yc=0;oldxc=0;oldyc=0;",
+								"init": "n=2;q=1;",
+								"audioChannel": "Center",
+								"audioRepresent": "Waveform",
+								"colors": [
+									"#ffff00"
+								],
+								"lineType": "Lines"
+							},
+							{
+								"type": "SuperScope",
+								"enabled": true,
+								"point": "x=(xc-oldxc)*i+oldxc;\r\ny=(yc-oldyc)*i+oldyc;",
+								"frame": "q=-q;oldxc=xc;oldyc=yc;xc=oldxc+(q+1)*(rand(50)-25)/250;yc=oldyc+(q-1)*(rand(50)-25)/250;",
+								"beat": "xc=0;yc=0;oldxc=0;oldyc=0;",
+								"init": "n=2;q=1;",
+								"audioChannel": "Center",
+								"audioRepresent": "Waveform",
+								"colors": [
+									"#0000ff"
+								],
+								"lineType": "Lines"
+							}
+						]
+					},
+					{
+						"type": "Unknown: (15)"
+					},
+					{
+						"type": "Unknown: (26)"
+					},
+					{
+						"type": "BufferSave",
+						"mode": "Save",
+						"buffer": "Current",
+						"blend": "Replace"
+					}
+				]
+			},
+			{
+				"type": "EffectList",
+				"enabled": true,
+				"clearFrame": false,
+				"input": "Ignore",
+				"output": "50/50",
+				"inAdjustBlend": 128,
+				"outAdjustBlend": 128,
+				"inBuffer": 0,
+				"outBuffer": 0,
+				"inBufferInvert": false,
+				"outBufferInvert": false,
+				"enableOnBeat": false,
+				"onBeatFrames": 1,
+				"components": [
+					{
+						"type": "SuperScope",
+						"enabled": true,
+						"point": "x=0;y=2*i-1;\r\nred=max(sin(y+t1),0.1);\r\ngreen=cos(y-t2);\r\nblue=max(abs(sin(y+1+t3)),0.3);\r\n",
+						"frame": "t1=t1+0.2*getspec(0.2,0.1,0);t2=t2+0.2*getspec(0.1,0.1,0);t3=t3+0.2*getspec(0.3,0.1,0);",
+						"beat": "",
+						"init": "n=80",
+						"audioChannel": "Center",
+						"audioRepresent": "Waveform",
+						"colors": [
+							"#000000"
+						],
+						"lineType": "Lines"
+					},
+					{
+						"type": "Unknown: (15)"
+					}
+				]
+			},
+			{
+				"type": "EffectList",
+				"enabled": true,
+				"clearFrame": false,
+				"input": "Ignore",
+				"output": "Maximum",
+				"inAdjustBlend": 128,
+				"outAdjustBlend": 128,
+				"inBuffer": 0,
+				"outBuffer": 0,
+				"inBufferInvert": false,
+				"outBufferInvert": false,
+				"enableOnBeat": false,
+				"onBeatFrames": 1,
+				"components": [
+					{
+						"type": "SuperScope",
+						"enabled": true,
+						"point": "y=0;x=2*i-1;\r\nred=max(sin(x+t1),0.1);\r\ngreen=cos(x-t2);\r\nblue=max(abs(sin(x+1+t3)),0.3);\r\n",
+						"frame": "t1=t1+0.2*getspec(0.3,0.1,0);t2=t2+0.2*getspec(0.6,0.1,0);t3=t3+0.2*getspec(0.2,0.1,0);",
+						"beat": "",
+						"init": "n=80",
+						"audioChannel": "Center",
+						"audioRepresent": "Waveform",
+						"colors": [
+							"#000000"
+						],
+						"lineType": "Lines"
+					},
+					{
+						"type": "Unknown: (15)"
+					}
+				]
+			},
+			{
+				"type": "DynamicMovement",
+				"enabled": true,
+				"point": "x1=asp*d*cos(r);\r\ny1=d*sin(r);\r\nz1=1;\r\n\r\nx2=x1*crz-y1*srz;\r\ny2=x1*srz+y1*crz;\r\n\r\nx1=x2*cry+z1*sry;\r\nz2=-x2*sry+z1*cry;\r\n\r\ny1=y2*crx-z2*srx;\r\nz1=y2*srx+z2*crx;\r\n\r\nk=sqr(2*x1)+sqr(sqr(y1));\r\nk=sqrt(k)/k;\r\nk2=sqr(2*y1)+sqr(sqr(x1));\r\nk2=sqrt(k2)/k2;\r\nk=min(k,k2);\r\nz1=z1*k;\r\n\r\nx=(abs(atan2(y1, x1))*1.02+0.4)*2;\r\ny=(z1+v)*0.3;\r\n\r\nalpha=min(max(1.7-abs(sqrt(z1)),0),1);",
+				"frame": "q=0.8*q+0.2*(tq+0.5);\r\nry=0.2*cos(2.1*t)+q*pi;\r\nrz=rz+drz;\r\nrx=0.4*sin(1.4*t);\r\ncrx=cos(rx);\r\nsrx=sin(rx);\r\ncry=cos(ry);\r\nsry=sin(ry);\r\ncrz=cos(rz);\r\nsrz=sin(rz);\r\nt=t+dt;\r\ndt=dt*0.97;\r\nv=v+dv;\r\nsv=sin(0.1*v);\r\nasp=w/h;",
+				"beat": "drz=(rand(50)-25)/300;\r\ndt=0.1;\r\ndv=(rand(50)+50)/400;\r\nbc=(bc+1)%10;\r\ntq=if(equal(bc,5),-tq,tq);",
+				"init": "tq=0.5;pi=acos(-1);dv=(rand(50)+50)/400;",
+				"bilinear": true,
+				"coordinates": "Cartesian",
+				"gridWidth": 15,
+				"gridHeight": 16,
+				"alpha": true,
+				"wrap": true,
+				"buffer": 1,
+				"alphaOnly": true
+			},
+			{
+				"type": "Unknown: (6)"
+			},
+			{
+				"type": "BufferSave",
+				"mode": "Save",
+				"buffer": "Current",
+				"blend": "Replace"
+			},
+			{
+				"type": "DynamicMovement",
+				"enabled": true,
+				"point": "alpha=kp;",
+				"frame": "kp=0.9*kp+0.1*tk;",
+				"beat": "tk=rand(3);",
+				"init": "",
+				"bilinear": true,
+				"coordinates": "Polar",
+				"gridWidth": 0,
+				"gridHeight": 0,
+				"alpha": true,
+				"wrap": true,
+				"buffer": 1,
+				"alphaOnly": true
+			},
+			{
+				"type": "ColorMap"
+			}
+		]
+	}
+}
 
 
 //From http://www.somacon.com/p355.php
@@ -616,7 +765,7 @@ function buildEditorTree() {
 	eventHook(newEffect, 'click', displayEffectView);
 	document.getElementById('editorTree').appendChild(newEffect);
 
-	recursiveTreePopulate(preset.components, document.getElementById('editorTree'), 'ET');
+	recursiveTreePopulate(preset.components.components, document.getElementById('editorTree'), 'ET');
 
 	if (selectedEffect && typeof selectedEffect == "string") {
 		selectedEffect = document.getElementById(selectedEffect);
@@ -660,7 +809,7 @@ function displayEffectView(e) {
 	if (treePos == 'Main') {
 		document.getElementById('effectContainer').innerHTML = 'Main';
 	} else {
-		var node = preset.components[treePos[0]];
+		var node = preset.components.components[treePos[0]];
 		if (treePos.length > 1) {
 			for (var i = 1; i < treePos.length; i++) {
 				node = node.components[treePos[i]];
@@ -672,14 +821,7 @@ function displayEffectView(e) {
 			thisEffectHTML = JSON.stringify(node);
 		} else {
 			for (var i in thisEffect.pane) {
-				for (var k in thisEffect.pane[i]) { //Try an iterate through this pane element
-					if (typeof thisEffect.pane[i][k] == 'object') { //If it has children handle them
-						thisEffectHTML += buildPaneElement(thisEffect.pane[i][k], node[i] && node[i][k] ? node[i][k] : '', k, i);
-					} else { //This is something without children so break the element loop
-						thisEffectHTML += buildPaneElement(thisEffect.pane[i], node[i] ? node[i] : '', i, '');
-						break;
-					}
-				}
+				thisEffectHTML += buildPaneElement(thisEffect.pane[i], node[i] ? node[i] : '', i, '');
 			}
 		}
 		document.getElementById('effectContainer').innerHTML = thisEffectHTML;
@@ -756,12 +898,12 @@ function popOutThis(e) {
 	var effectID;
 	for (var i = 0; i < effectElement.childNodes.length; i++) {
 		if (effectElement.childNodes[i].id) {
-			effectID = effectElement.childNodes[i].id.split('-');
+			effectID = effectElement.childNodes[i].id;
 			break;
 		}
 	}
 
-	var popID = selectedEffect.id + '_' + effectID.join('-');
+	var popID = selectedEffect.id + '_' + effectID;
 
 	if (poppedOut.indexOf(popID) != -1) {
 		return; //This element has already been popped out. We should not hit this.
@@ -771,30 +913,27 @@ function popOutThis(e) {
 	effectElement.childNodes[i].disabled = 'disabled';
 
 	var treePos = selectedEffect.id.substr(3).split('-');
-	var node = preset.components[treePos[0]];
+	var node = preset.components.components[treePos[0]];
 	if (treePos.length > 1) {
 		for (var i = 1; i < treePos.length; i++) {
 			node = node.components[treePos[i]];
 		}
 	}
-	var thisEffect = effectInfo[node.type];
-	var effectElement = thisEffect.pane;
-	var effectData = node;
-	for (var i = 0; i < effectID.length; i++) {
-		effectElement = effectElement[effectID[i]];
-		effectData = effectData[effectID[i]];
-	}
+
+	var effectElement = effectInfo[node.type].pane[effectID];
+	var effectData = node[effectID];
+
 //<textarea id="' + thisID + '" style="width:100%;height:' + (typeInfo.height ? typeInfo.height : '50') + 'px;resize:vertical;" onchange="updatePreset(event)">' + data + '</textarea>
-	var wID = newWindow({"caption": selectedEffect.textContent + ' &gt; ' + e.target.parentNode.childNodes[0].textContent, "icon": "icon.png", "width": 320, "height": 320, "resizeable": true, "form": buildPaneElement(effectElement, effectData ? effectData : '', popID, 'popout', true), "close": popOutCloseThis});
+	var wID = newWindow({"caption": selectedEffect.textContent + ' &gt; ' + e.target.parentNode.childNodes[0].textContent, "icon": "icon.png", "width": 320, "height": 320, "resizeable": true, "form": buildPaneElement(effectElement, effectData ? effectData : '', popID, '', true), "close": popOutCloseThis});
 	windows[wID].popID = [selectedEffect.id, effectID];
 }
 
 function popOutCloseThis(id) {
 	//Remove it from the popped out list
-	poppedOut[poppedOut.indexOf(windows[id].popID[0] + '_' + windows[id].popID[1].join('-'))] = null;
+	poppedOut[poppedOut.indexOf(windows[id].popID[0] + '_' + windows[id].popID[1])] = null;
 
 	//If we're on the pane where this element belongs then:
-	var tmpID = windows[id].popID[1].join('-');
+	var tmpID = windows[id].popID[1];
 	if (selectedEffect.id == windows[id].popID[0] && document.getElementById(tmpID)) {
 		document.getElementById(tmpID).disabled = ''; //Re-enable the textarea
 		document.getElementById(tmpID).parentNode.childNodes[1].style.display = ''; //Show the popout link again
@@ -803,7 +942,28 @@ function popOutCloseThis(id) {
 }
 
 function updatePreset(e) {
-	//
+	if (e.target.id.indexOf('_') != -1) { //popped out element
+		var tmpID = e.target.id;
+		var tree = tmpID[0];
+		//We should update the pane view here, if it's visible.
+	} else { //in a pane
+		var tree = selectedEffect.id;
+	}
+
+	//Walk the tree
+	var treePos = tree.substr(3).split('-');
+	var node = preset.components.components[treePos[0]];
+	if (treePos.length > 1) {
+		for (var i = 1; i < treePos.length; i++) {
+			node = node.components[treePos[i]];
+		}
+	}
+	var thisEffect = effectInfo[node.type];
+	var effectData = node;
+	for (var i = 0; i < effectID.length; i++) {
+		effectData = effectData[effectID[i]];
+	}
+
 	console.log(e.target.id);
 }
 
