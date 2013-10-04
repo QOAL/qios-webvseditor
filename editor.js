@@ -727,7 +727,7 @@ function newEditorWindow() {
 	//Need to make sure there is only one of these at a time!
 	//newWindow({"caption": "WebVS Editor", "icon": "brush_light_icon.png", "width": 640, "height": 480, "resizeable": true, "init": function() { buildEditor(this.wID)}});
 	var editorMarkup = '<div class="winnav"><input type="button" value="Hello"/></div>' +
-				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - "/><input type="button" value=" + "/><input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"></div></div>' +
+				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" /><input type="button" value=" + "/><input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"></div></div>' +
 				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
 				'<div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
 	newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree});
@@ -990,7 +990,48 @@ function duplicatedSelected() {
 		preset.components.components.splice(Math.max(0, treePos[0]), 0, node);
 	}
 
+
 	buildEditorTree();
+
+	//Select the original effect
+	treePos[treePos.length - 1]++;
+	var evt = document.createEvent("MouseEvents");
+	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+	document.getElementById('ET-' + treePos.join('-')).dispatchEvent(evt);
+
+	//This is where webvs would be given the updated preset
+}
+
+function removeSelected() {
+	if (!selectedEffect || selectedEffect.id == 'ET-Main') { return; }
+
+	var treePos = selectedEffect.id.substr(3).split('-');
+	var node = preset.components.components[treePos[0]];
+	if (treePos.length > 1) {
+		for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
+			node = node.components[treePos[i]];
+		}
+		node.components.splice(treePos[i], 1);
+	} else { //This is a root element
+		preset.components.components.splice(treePos[0], 1);
+	}
+
+	buildEditorTree();
+
+	//Select the effect that moved into the removed effects position
+	if (document.getElementById('ET-' + treePos.join('-'))) {
+		var newSel = document.getElementById('ET-' + treePos.join('-'));
+	} else {
+		treePos[treePos.length - 1]--;
+		if (document.getElementById('ET-' + treePos.join('-'))) {
+			var newSel = document.getElementById('ET-' + treePos.join('-'));
+		} else {
+			var newSel = document.getElementById('ET-Main');
+		}
+	}
+	var evt = document.createEvent("MouseEvents");
+	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+	newSel.dispatchEvent(evt);
 
 	//This is where webvs would be given the updated preset
 }
