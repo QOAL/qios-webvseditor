@@ -92,241 +92,18 @@ var effectInfo = {
 			"point": { label: "Per Pixel", control: control_code, "height": 80 },
 			"coordinates": { label: "Rectangular coordinates:", control: control_check, "default": false }
 		}
+	},
+	"Blur": {
+		"name": "Blur",
+		"type": "Trans",
+		"pane": {
+			"blur": { label: "Strength:", control: control_radio, "options": ["None", "Light", "Medium", "Heavy"], "default": 2 },
+			"rounding": { label: "Rounding:", control: control_radio, "options": ["Down", "Up"], "default": 0 }
+		}
 	}
 };
 
-var preset = {
-	"name": "141 - Tachyon Based Data Bus",
-	"author": "Jheriko",
-	"components": {
-		"clearFrame": 0,
-		"components": [
-			{
-				"type": "Comment",
-				"text": ":::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\r\n:::::::::::::::::::::           Tachyon Based Data Bus               :::::::::::::::::::::\r\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::\r\n\r\n... or 'Just Another Tunnel II'? Well, 'Just Another Tunnel' was the most popular preset in my last pack so I've tried to come up with another unique tunnel preset of a similar nature yet different.\r\n\r\nThe idea behind the fictional tachyon based technology (yes I stole a word from Star Trek) is that you can make a computer processor, motherboard, graphics card... etc, that send messages down tachyon buses back in time to when they are needed, the same principle that is used in 'Bill and Ted's Most Excellent Adventure' (what a classic film), the point is that you can leave your computer on overnight doing the calculations and crap that it needed to do its work for the day. I tried to make the fog in the tunnel echo this by doing the 'still drawing what was there before' effect whilst trying not to let the tunnel itself contribute to much to the fog effect, the glowing border to the fog makes it look a bit like the tunnel is being created ahead of the camera.\r\n\r\nThe cool thing about this style of tunnel in my opinion is the way that it passes as a square tunnel and doesn't have the glitchy edges. The finishing touch was the blended color map. you can remove this by deleting the Misc/Buffer Save, Trans/Color Map and Trans/Dynamic Movement at the bottom of the preset. I get about 3 fps more this way.\r\n\r\nFor a 'Just Another Tunnel - NicMix' style version of this preset find this line in the topmost DM: k=min(k,k2); and replace it with k=max(k,k2);. For another interesting tunnel try this\r\n\r\nk=sqr(2*x1)+sqr(sqr(y1));\r\nk=sqrt(k)/k;\r\nk2=sqr(2*y1)+sqr(sqr(0.5*x1));\r\nk2=sqrt(k2)/k2;\r\nk3=sqr(0.5*x1)+sqr(0.8*y1);\r\nk3=sqrt(k3)/k3;\r\nk=max(max(k,k2),k3);\r\n\r\nin place of\r\n\r\nk=sqr(2*x1)+sqr(sqr(y1));\r\nk=sqrt(k)/k;\r\nk2=sqr(2*y1)+sqr(sqr(0.5*x1));\r\nk2=sqrt(k2)/k2;\r\nk=min(k,k2);\r\n\r\n-- Jheriko\r\n\r\njheriko@ntlworld.com\r\n\r\n:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"
-			},
-			{
-				"type": "EffectList",
-				"enabled": true,
-				"clearFrame": false,
-				"input": "Ignore",
-				"output": "Ignore",
-				"inAdjustBlend": 128,
-				"outAdjustBlend": 128,
-				"inBuffer": 0,
-				"outBuffer": 0,
-				"inBufferInvert": false,
-				"outBufferInvert": false,
-				"enableOnBeat": false,
-				"onBeatFrames": 1,
-				"components": [
-					{
-						"type": "EffectList",
-						"enabled": true,
-						"clearFrame": false,
-						"input": "Ignore",
-						"output": "Replace",
-						"inAdjustBlend": 128,
-						"outAdjustBlend": 128,
-						"inBuffer": 0,
-						"outBuffer": 0,
-						"inBufferInvert": false,
-						"outBufferInvert": false,
-						"enableOnBeat": false,
-						"onBeatFrames": 1,
-						"components": [
-							{
-								"type": "FadeOut",
-								"speed": 2,
-								"color": "#000000"
-							},
-							{
-								"type": "SuperScope",
-								"enabled": true,
-								"point": "x=(xc-oldxc)*i+oldxc;\r\ny=(yc-oldyc)*i+oldyc;",
-								"frame": "q=-q;oldxc=xc;oldyc=yc;xc=oldxc+(q+1)*(rand(50)-25)/250;yc=oldyc+(q-1)*(rand(50)-25)/250;",
-								"beat": "xc=0;yc=0;oldxc=0;oldyc=0;",
-								"init": "n=2;q=1;",
-								"audioChannel": "Center",
-								"audioRepresent": "Waveform",
-								"colors": [
-									"#ffffff"
-								],
-								"lineType": "Lines"
-							},
-							{
-								"type": "SuperScope",
-								"enabled": true,
-								"point": "x=(xc-oldxc)*i+oldxc;\r\ny=(yc-oldyc)*i+oldyc;",
-								"frame": "q=-q;oldxc=xc;oldyc=yc;xc=oldxc+(q+1)*(rand(50)-25)/250;yc=oldyc+(q-1)*(rand(50)-25)/250;",
-								"beat": "xc=0;yc=0;oldxc=0;oldyc=0;",
-								"init": "n=2;q=1;",
-								"audioChannel": "Center",
-								"audioRepresent": "Waveform",
-								"colors": [
-									"#00ff00"
-								],
-								"lineType": "Lines"
-							},
-							{
-								"type": "SuperScope",
-								"enabled": true,
-								"point": "x=(xc-oldxc)*i+oldxc;\r\ny=(yc-oldyc)*i+oldyc;",
-								"frame": "q=-q;oldxc=xc;oldyc=yc;xc=oldxc+(q+1)*(rand(50)-25)/250;yc=oldyc+(q-1)*(rand(50)-25)/250;",
-								"beat": "xc=0;yc=0;oldxc=0;oldyc=0;",
-								"init": "n=2;q=1;",
-								"audioChannel": "Center",
-								"audioRepresent": "Waveform",
-								"colors": [
-									"#ffff00"
-								],
-								"lineType": "Lines"
-							},
-							{
-								"type": "SuperScope",
-								"enabled": true,
-								"point": "x=(xc-oldxc)*i+oldxc;\r\ny=(yc-oldyc)*i+oldyc;",
-								"frame": "q=-q;oldxc=xc;oldyc=yc;xc=oldxc+(q+1)*(rand(50)-25)/250;yc=oldyc+(q-1)*(rand(50)-25)/250;",
-								"beat": "xc=0;yc=0;oldxc=0;oldyc=0;",
-								"init": "n=2;q=1;",
-								"audioChannel": "Center",
-								"audioRepresent": "Waveform",
-								"colors": [
-									"#0000ff"
-								],
-								"lineType": "Lines"
-							}
-						]
-					},
-					{
-						"type": "Unknown: (15)"
-					},
-					{
-						"type": "Unknown: (26)"
-					},
-					{
-						"type": "BufferSave",
-						"mode": "Save",
-						"buffer": "Current",
-						"blend": "Replace"
-					}
-				]
-			},
-			{
-				"type": "EffectList",
-				"enabled": true,
-				"clearFrame": false,
-				"input": "Ignore",
-				"output": "50/50",
-				"inAdjustBlend": 128,
-				"outAdjustBlend": 128,
-				"inBuffer": 0,
-				"outBuffer": 0,
-				"inBufferInvert": false,
-				"outBufferInvert": false,
-				"enableOnBeat": false,
-				"onBeatFrames": 1,
-				"components": [
-					{
-						"type": "SuperScope",
-						"enabled": true,
-						"point": "x=0;y=2*i-1;\r\nred=max(sin(y+t1),0.1);\r\ngreen=cos(y-t2);\r\nblue=max(abs(sin(y+1+t3)),0.3);\r\n",
-						"frame": "t1=t1+0.2*getspec(0.2,0.1,0);t2=t2+0.2*getspec(0.1,0.1,0);t3=t3+0.2*getspec(0.3,0.1,0);",
-						"beat": "",
-						"init": "n=80",
-						"audioChannel": "Center",
-						"audioRepresent": "Waveform",
-						"colors": [
-							"#000000"
-						],
-						"lineType": "Lines"
-					},
-					{
-						"type": "Unknown: (15)"
-					}
-				]
-			},
-			{
-				"type": "EffectList",
-				"enabled": true,
-				"clearFrame": false,
-				"input": "Ignore",
-				"output": "Maximum",
-				"inAdjustBlend": 128,
-				"outAdjustBlend": 128,
-				"inBuffer": 0,
-				"outBuffer": 0,
-				"inBufferInvert": false,
-				"outBufferInvert": false,
-				"enableOnBeat": false,
-				"onBeatFrames": 1,
-				"components": [
-					{
-						"type": "SuperScope",
-						"enabled": true,
-						"point": "y=0;x=2*i-1;\r\nred=max(sin(x+t1),0.1);\r\ngreen=cos(x-t2);\r\nblue=max(abs(sin(x+1+t3)),0.3);\r\n",
-						"frame": "t1=t1+0.2*getspec(0.3,0.1,0);t2=t2+0.2*getspec(0.6,0.1,0);t3=t3+0.2*getspec(0.2,0.1,0);",
-						"beat": "",
-						"init": "n=80",
-						"audioChannel": "Center",
-						"audioRepresent": "Waveform",
-						"colors": [
-							"#000000"
-						],
-						"lineType": "Lines"
-					},
-					{
-						"type": "Unknown: (15)"
-					}
-				]
-			},
-			{
-				"type": "DynamicMovement",
-				"enabled": true,
-				"point": "x1=asp*d*cos(r);\r\ny1=d*sin(r);\r\nz1=1;\r\n\r\nx2=x1*crz-y1*srz;\r\ny2=x1*srz+y1*crz;\r\n\r\nx1=x2*cry+z1*sry;\r\nz2=-x2*sry+z1*cry;\r\n\r\ny1=y2*crx-z2*srx;\r\nz1=y2*srx+z2*crx;\r\n\r\nk=sqr(2*x1)+sqr(sqr(y1));\r\nk=sqrt(k)/k;\r\nk2=sqr(2*y1)+sqr(sqr(x1));\r\nk2=sqrt(k2)/k2;\r\nk=min(k,k2);\r\nz1=z1*k;\r\n\r\nx=(abs(atan2(y1, x1))*1.02+0.4)*2;\r\ny=(z1+v)*0.3;\r\n\r\nalpha=min(max(1.7-abs(sqrt(z1)),0),1);",
-				"frame": "q=0.8*q+0.2*(tq+0.5);\r\nry=0.2*cos(2.1*t)+q*pi;\r\nrz=rz+drz;\r\nrx=0.4*sin(1.4*t);\r\ncrx=cos(rx);\r\nsrx=sin(rx);\r\ncry=cos(ry);\r\nsry=sin(ry);\r\ncrz=cos(rz);\r\nsrz=sin(rz);\r\nt=t+dt;\r\ndt=dt*0.97;\r\nv=v+dv;\r\nsv=sin(0.1*v);\r\nasp=w/h;",
-				"beat": "drz=(rand(50)-25)/300;\r\ndt=0.1;\r\ndv=(rand(50)+50)/400;\r\nbc=(bc+1)%10;\r\ntq=if(equal(bc,5),-tq,tq);",
-				"init": "tq=0.5;pi=acos(-1);dv=(rand(50)+50)/400;",
-				"bilinear": true,
-				"coordinates": "Cartesian",
-				"gridWidth": 15,
-				"gridHeight": 16,
-				"alpha": true,
-				"wrap": true,
-				"buffer": 1,
-				"alphaOnly": true
-			},
-			{
-				"type": "Unknown: (6)"
-			},
-			{
-				"type": "BufferSave",
-				"mode": "Save",
-				"buffer": "Current",
-				"blend": "Replace"
-			},
-			{
-				"type": "DynamicMovement",
-				"enabled": true,
-				"point": "alpha=kp;",
-				"frame": "kp=0.9*kp+0.1*tk;",
-				"beat": "tk=rand(3);",
-				"init": "",
-				"bilinear": true,
-				"coordinates": "Polar",
-				"gridWidth": 0,
-				"gridHeight": 0,
-				"alpha": true,
-				"wrap": true,
-				"buffer": 1,
-				"alphaOnly": true
-			},
-			{
-				"type": "ColorMap"
-			}
-		]
-	}
-}
+var preset = {};
 
 
 //From http://www.somacon.com/p355.php
@@ -727,7 +504,7 @@ function newEditorWindow() {
 	//Need to make sure there is only one of these at a time!
 	//newWindow({"caption": "WebVS Editor", "icon": "brush_light_icon.png", "width": 640, "height": 480, "resizeable": true, "init": function() { buildEditor(this.wID)}});
 	var editorMarkup = '<div class="winnav"><input type="button" value="Hello"/></div>' +
-				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" /><input type="button" value=" + "/><input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"></div></div>' +
+				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" /><input type="button" value=" + " onclick="showNewEffectMenu()" /><input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"></div></div>' +
 				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
 				'<div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
 	newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree});
@@ -1072,6 +849,53 @@ function updatePreset(e) {
 	//This is where webvs would be given the updated preset
 }
 
+function showNewEffectMenu() {
+	//
+}
+
+function addEffectToPreset() {
+	//
+}
+
+function buildEffectMenu() {
+	var menu = {"root":[]};
+	for (var i in effectInfo) {
+		if (effectInfo[i].name != "Unknown" && effectInfo[i].name != "Main") {
+			if (effectInfo[i].type != "") {
+				if (!menu[effectInfo[i].type]) { menu[effectInfo[i].type] = []; }
+				menu[effectInfo[i].type].push(effectInfo[i].name);
+			} else {
+				menu["root"].push(effectInfo[i].name);
+			}
+		}
+	}
+	//So now we should sort each part of the list
+	console.log(menu);
+	for (var i in menu) {
+		menu[i].sort();
+	}
+	console.log(menu);
+	//Then build the dom
+}
+
+function fetchPreset() {
+	if (window.XMLHttpRequest) {
+		xhrFetch = new XMLHttpRequest();
+	} else {
+		xhrFetch = new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	xhrFetch.onload = function() {
+		if (this.status == 200) {
+			preset = JSON.parse(this.responseText);
+		} else {
+			//Error!
+			//this.status + '<br />' + this.responseText;
+		}
+	};
+	xhrFetch.open("get", "Jeheriko_141.webvs", false);
+	xhrFetch.send();
+}
+
 function init() {
 	area = document.getElementById("area");
 	eventHook(document, "mousemove", mousemove);
@@ -1091,6 +915,9 @@ function init() {
 	eventHook(document, "dragover", dndCancel);
 	eventHook(document, "dragenter", dndCancel);
 	setInterval(setTrayClock, 1000); setTrayClock(); //This needs improving. We can get the update tick in sync, copy what was done for offline planner
+
+	fetchPreset();
+
 	newEditorWindow();
 	//We need some way of registering windows onload, that'll let us add them to menus and stuff if they want to be placed on one.
 }

@@ -558,6 +558,7 @@ img { border: 0; }
 * { -moz-user-select: -moz-none; }
 input, textarea { -moz-user-select: text; }
 input[type="checkbox"] { vertical-align: middle; }
+input[type="radio"] { vertical-align: text-bottom; }
 button::-moz-focus-inner, input::-moz-focus-inner { border: 0; padding: 0; }
 
 /*input[type=button] {
