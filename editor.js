@@ -864,6 +864,9 @@ function addThisEffect(e) {
 	document.getElementById('newEffectListHost').style.display = 'none';
 
 	var newNode = {"type": e.target.id.substr(5)}; //Basic stub node. Unsure if this is okay for the long term.
+	if (e.target.id.substr(5) == 'EffectList') { //Effect Lists need a bit more fleshing out to be funcational
+		newNode.components = [];
+	}
 
 	if (!selectedEffect || selectedEffect.id == 'ET-Main') {
 		var treePos = [0]
