@@ -248,7 +248,10 @@ function mousedown(e) {
 	} else {
 		var selectedEle = e.target;
 	}
-	if (selectedEle.className || selectedEle.parentNode.parentNode.className != "menu") { document.getElementById('taskmenu').style.display = 'none'; }
+	if (selectedEle.className || selectedEle.parentNode.parentNode.className != "menu") { //I don't really like this menu hiding code.
+		document.getElementById('taskmenu').style.display = 'none';
+		if (!selectedEle.id || selectedEle.id.substr(0, 5) != 'menu-') { document.getElementById('newEffectListHost').style.display = 'none'; }
+	}
 	if (selectedEle && selectedEle.id && selectedEle.className == "titlebar" && e.which == 1) { mdti = selectedEle.id.substr(1); };
 
 	while (selectedEle && selectedEle.className.substr(0, 6) != 'window' && selectedEle != null && selectedEle != document.body) {
@@ -504,10 +507,14 @@ function newEditorWindow() {
 	//Need to make sure there is only one of these at a time!
 	//newWindow({"caption": "WebVS Editor", "icon": "brush_light_icon.png", "width": 640, "height": 480, "resizeable": true, "init": function() { buildEditor(this.wID)}});
 	var editorMarkup = '<div class="winnav"><input type="button" value="Hello"/></div>' +
-				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" /><input type="button" value=" + " onclick="showNewEffectMenu()" /><input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"></div></div>' +
+				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" />' +
+				'<input type="button" value=" + " onclick="document.getElementById(\'newEffectListHost\').style.display = \'block\';" /><div class="menu" id="newEffectListHost"><ul></ul></div>' +
+				'<input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"></div></div>' +
 				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
 				'<div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
 	newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree});
+
+	buildEffectMenu();
 }
 
 function toggleTaskMenu(e) {
@@ -849,33 +856,80 @@ function updatePreset(e) {
 	//This is where webvs would be given the updated preset
 }
 
-function showNewEffectMenu() {
-	//
-}
+function addThisEffect(e) {
+	//If the tree has no selected elements, then it inserted after the Main node
+	//If the selected element is an effects list then the effect is insert as the first child in that list
+	//Otherwise it is inserted before the selected effect
+	if (!e.target.id || e.target.id.substr(0, 5) != 'menu-') { return; }
+	document.getElementById('newEffectListHost').style.display = 'none';
 
-function addEffectToPreset() {
-	//
+	var newNode = {"type": e.target.id.substr(5)}; //Basic stub node. Unsure if this is okay for the long term.
+
+	if (!selectedEffect || selectedEffect.id == 'ET-Main') {
+		var treePos = [0]
+		preset.components.components.splice(0, 0, newNode);
+	} else {
+		var treePos = selectedEffect.id.substr(3).split('-');
+
+		if (selectedEffect.getAttribute('class').indexOf('effectTree') != -1) {
+			treePos.push(0); //If an effect list is selected then the new node becomes a child of it.
+		}
+
+		var node = preset.components.components[treePos[0]];
+		if (treePos.length > 1) {
+			for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
+				node = node.components[treePos[i]];
+			}
+			node.components.splice(Math.max(0, treePos[i]), 0, newNode);
+		} else { //This is a root element
+			preset.components.components.splice(Math.max(0, treePos[0]), 0, newNode);
+		}
+	}
+
+
+	buildEditorTree();
+
+	//Select the original effect
+	var evt = document.createEvent("MouseEvents");
+	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+	document.getElementById('ET-' + treePos.join('-')).dispatchEvent(evt);
+
+	//This is where webvs would be given the updated preset
 }
 
 function buildEffectMenu() {
-	var menu = {"root":[]};
+	var markup = '', types = ["_"];
+	var menu = {"_":[]};
+
+	//Something should be done here for preset loading.
+	markup += '<li class="subMenu">Presets<ul><li>None</li></ul><li class="menuspacer"></li>';
+
+	//Fill some arrays with the needed information we need from effectInfo
 	for (var i in effectInfo) {
 		if (effectInfo[i].name != "Unknown" && effectInfo[i].name != "Main") {
 			if (effectInfo[i].type != "") {
-				if (!menu[effectInfo[i].type]) { menu[effectInfo[i].type] = []; }
-				menu[effectInfo[i].type].push(effectInfo[i].name);
+				if (!menu[effectInfo[i].type]) { menu[effectInfo[i].type] = []; types.push(effectInfo[i].type); }
+				menu[effectInfo[i].type].push(i);
 			} else {
-				menu["root"].push(effectInfo[i].name);
+				menu["_"].push(i);
 			}
 		}
 	}
-	//So now we should sort each part of the list
-	console.log(menu);
-	for (var i in menu) {
-		menu[i].sort();
+	//So now we should sort each part of the list & build the dom
+	types.sort();
+	for (var i in types) {
+		menu[types[i]].sort();
+		if (types[i] == "_") { continue; }
+		markup += '<li class="subMenu">' + types[i] + '<ul>';
+		for (var k in menu[types[i]]) {
+			markup += '<li id="menu-' + menu[types[i]][k] + '" onclick="addThisEffect(event)">' + effectInfo[menu[types[i]][k]].name + '</li>';
+		}
+		markup += '</ul></li>';
 	}
-	console.log(menu);
-	//Then build the dom
+	for (var k in menu["_"]) {
+		markup += '<li id="menu-' + menu["_"][k] + '" onclick="addThisEffect(event)">' + effectInfo[menu["_"][k]].name + '</li>';
+	}
+	document.getElementById('newEffectListHost').childNodes[0].innerHTML = markup;
 }
 
 function fetchPreset() {
