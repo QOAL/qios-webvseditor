@@ -744,8 +744,14 @@ function popOutThis(e) {
 		}
 	}
 
-	var effectElement = effectInfo[node.type].pane[effectID];
-	var effectData = node[effectID];
+	if (effectID.substr('-')) {
+		effectID = effectID.split('-');
+		var effectElement = effectInfo[node.type].pane[effectID[0]][effectID[1]];
+		var effectData = node[effectID[0]][effectID[1]];
+	} else {
+		var effectElement = effectInfo[node.type].pane[effectID];
+		var effectData = node[effectID];
+	}
 
 	var popoutMarkup = '<div class="popoutHost"><textarea class="popoutElement" id="' + popID + '" onchange="updatePreset(event)" wrap="off">' + (effectData ? effectData : '') + '</textarea><div class="popoutStatusBar" onclick="selectFromPopout(event)" title="Click to select this effect in the editor">' + treeTrail + '</div></div>';
 	var wID = newWindow({"caption": selectedEffect.textContent + ' &gt; ' + e.target.parentNode.childNodes[0].textContent, "icon": "icon.png", "width": 320, "height": 320, "resizeable": true, "form": popoutMarkup, "close": popOutCloseThis});
@@ -754,10 +760,10 @@ function popOutThis(e) {
 
 function popOutCloseThis(id) {
 	//Remove it from the popped out list
-	poppedOut[poppedOut.indexOf(windows[id].popID[0] + '_' + windows[id].popID[1])] = null;
+	poppedOut[poppedOut.indexOf(windows[id].popID[0] + '_' + windows[id].popID[1].join('-'))] = null;
 
 	//If we're on the pane where this element belongs then:
-	var tmpID = windows[id].popID[1];
+	var tmpID = windows[id].popID[1].join('-');
 	if (selectedEffect.id == windows[id].popID[0] && document.getElementById(tmpID)) {
 		document.getElementById(tmpID).disabled = ''; //Re-enable the textarea
 		document.getElementById(tmpID).parentNode.childNodes[1].style.display = ''; //Show the popout link again
@@ -862,7 +868,12 @@ function updatePreset(e) {
 				node = node.components[treePos[i]];
 			}
 		}
-		node[effect] = newValue;
+		if (effect.substr('-')) {
+			effect = effect.split('-');
+			node[effect[0]][effect[1]] = newValue;
+		} else {
+			node[effect] = newValue;
+		}
 	}
 
 	//This is where webvs would be given the updated preset
