@@ -69,11 +69,13 @@ var effectInfo = {
 		"name": "SuperScope",
 		"type": "Render",
 		"pane": {
-			"init": { label: "Init", control: control_code, "height": 30 },
-			"frame": { label: "Per Frame", control: control_code, "height": 60 },
-			"beat": { label: "On Beat", control: control_code },
-			"point": { label: "Per Point", control: control_code, "height": 80 },
-			"source": { control: control_radio, "options": ["Waveform", "Spectrum"], "default": 0 },
+			"code": {
+				"init": { label: "Init", control: control_code, "height": 30 },
+				"perFrame": { label: "Per Frame", control: control_code, "height": 60 },
+				"onBeat": { label: "On Beat", control: control_code },
+				"perPoint": { label: "Per Point", control: control_code, "height": 80 }
+			},
+			"source": { label: "Source data:", control: control_radio, "options": ["Waveform", "Spectrum"], "default": 0 },
 			"audioChannel": { label: "Channel:", control: control_radio, "options": ["Left", "Centre", "Right"], "default": 1 },
 			"lineType": { label: "Draw as:", control: control_radio, "options": ["Dots", "Lines"], "default": 1},
 			"colour": {
@@ -86,10 +88,12 @@ var effectInfo = {
 		"name": "Dynamic Movement",
 		"type": "Trans",
 		"pane": {
-			"init": { label: "Init", control: control_code, "height": 30 },
-			"frame": { label: "Per Frame", control: control_code, "height": 60 },
-			"beat": { label: "On Beat", control: control_code },
-			"point": { label: "Per Pixel", control: control_code, "height": 80 },
+			"code": {
+				"init": { label: "Init", control: control_code, "height": 30 },
+				"perFrame": { label: "Per Frame", control: control_code, "height": 60 },
+				"onBeat": { label: "On Beat", control: control_code },
+				"perPoint": { label: "Per Pixel", control: control_code, "height": 80 }
+			},
 			"coordinates": { label: "Rectangular coordinates:", control: control_check, "default": false }
 		}
 	},
@@ -565,7 +569,7 @@ function buildEditorTree() {
 	eventHook(newEffect, 'click', displayEffectView);
 	document.getElementById('editorTree').appendChild(newEffect);
 
-	recursiveTreePopulate(preset.components.components, document.getElementById('editorTree'), 'ET');
+	recursiveTreePopulate(preset.components, document.getElementById('editorTree'), 'ET');
 
 	if (selectedEffect && typeof selectedEffect == "string") {
 		selectedEffect = document.getElementById(selectedEffect);
@@ -615,7 +619,7 @@ function displayEffectView(e) {
 			thisEffectHTML += buildPaneElement(thisEffect.pane[i], preset.components[i] ? preset.components[i] : (preset[i] ? preset[i] : ''), i, '');
 		}
 	} else {
-		var node = preset.components.components[treePos[0]];
+		var node = preset.components[treePos[0]];
 		if (treePos.length > 1) {
 			for (var i = 1; i < treePos.length; i++) {
 				node = node.components[treePos[i]];
@@ -629,7 +633,15 @@ function displayEffectView(e) {
 			thisEffectHTML = '<textarea id="text" style="width:100%;resize:none;font-family:arial;font-size:11px;height:calc(100% - 6px);margin:0;" onchange="updatePreset(event)">' + theComment + '</textarea>';
 		} else {
 			for (var i in thisEffect.pane) {
-				thisEffectHTML += buildPaneElement(thisEffect.pane[i], node[i] ? node[i] : '', i, '');
+				for (var k in thisEffect.pane[i]) { //Try an iterate through this pane element
+					if (typeof thisEffect.pane[i][k] == 'object') { //If it has children handle them
+						thisEffectHTML += buildPaneElement(thisEffect.pane[i][k], node[i] && node[i][k] ? node[i][k] : '', k, i);
+					} else { //This is something without children so break the element loop
+						thisEffectHTML += buildPaneElement(thisEffect.pane[i], node[i] ? node[i] : '', i, '');
+						break;
+					}
+				}
+				//thisEffectHTML += buildPaneElement(thisEffect.pane[i], node[i] ? node[i] : '', i, '');
 			}
 		}
 	}
@@ -723,7 +735,7 @@ function popOutThis(e) {
 	effectElement.childNodes[i].disabled = 'disabled';
 
 	var treePos = selectedEffect.id.substr(3).split('-');
-	var node = preset.components.components[treePos[0]];
+	var node = preset.components[treePos[0]];
 	var treeTrail = effectInfo[node.type].name; //Build a string to give the user an idea of where this element belongs.
 	if (treePos.length > 1) {
 		for (var i = 1; i < treePos.length; i++) {
@@ -764,14 +776,14 @@ function duplicatedSelected() {
 	if (!selectedEffect || selectedEffect.id == 'ET-Main') { return; }
 
 	var treePos = selectedEffect.id.substr(3).split('-');
-	var node = preset.components.components[treePos[0]];
+	var node = preset.components[treePos[0]];
 	if (treePos.length > 1) {
 		for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
 			node = node.components[treePos[i]];
 		}
 		node.components.splice(Math.max(0, treePos[i]), 0, node.components[treePos[i]]);
 	} else { //This is a root element
-		preset.components.components.splice(Math.max(0, treePos[0]), 0, node);
+		preset.components.splice(Math.max(0, treePos[0]), 0, node);
 	}
 
 
@@ -790,14 +802,14 @@ function removeSelected() {
 	if (!selectedEffect || selectedEffect.id == 'ET-Main') { return; }
 
 	var treePos = selectedEffect.id.substr(3).split('-');
-	var node = preset.components.components[treePos[0]];
+	var node = preset.components[treePos[0]];
 	if (treePos.length > 1) {
 		for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
 			node = node.components[treePos[i]];
 		}
 		node.components.splice(treePos[i], 1);
 	} else { //This is a root element
-		preset.components.components.splice(treePos[0], 1);
+		preset.components.splice(treePos[0], 1);
 	}
 
 	buildEditorTree();
@@ -844,7 +856,7 @@ function updatePreset(e) {
 	} else {
 		//Walk the tree
 		var treePos = tree.substr(3).split('-');
-		var node = preset.components.components[treePos[0]];
+		var node = preset.components[treePos[0]];
 		if (treePos.length > 1) {
 			for (var i = 1; i < treePos.length; i++) {
 				node = node.components[treePos[i]];
@@ -870,7 +882,7 @@ function addThisEffect(e) {
 
 	if (!selectedEffect || selectedEffect.id == 'ET-Main') {
 		var treePos = [0]
-		preset.components.components.splice(0, 0, newNode);
+		preset.components.splice(0, 0, newNode);
 	} else {
 		var treePos = selectedEffect.id.substr(3).split('-');
 
@@ -878,14 +890,14 @@ function addThisEffect(e) {
 			treePos.push(0); //If an effect list is selected then the new node becomes a child of it.
 		}
 
-		var node = preset.components.components[treePos[0]];
+		var node = preset.components[treePos[0]];
 		if (treePos.length > 1) {
 			for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
 				node = node.components[treePos[i]];
 			}
 			node.components.splice(Math.max(0, treePos[i]), 0, newNode);
 		} else { //This is a root element
-			preset.components.components.splice(Math.max(0, treePos[0]), 0, newNode);
+			preset.components.splice(Math.max(0, treePos[0]), 0, newNode);
 		}
 	}
 
