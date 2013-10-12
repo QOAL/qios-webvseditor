@@ -510,7 +510,7 @@ function buildEditor(wID) {
 function newEditorWindow() {
 	//Need to make sure there is only one of these at a time!
 	//newWindow({"caption": "WebVS Editor", "icon": "brush_light_icon.png", "width": 640, "height": 480, "resizeable": true, "init": function() { buildEditor(this.wID)}});
-	var editorMarkup = '<div class="winnav"><input type="button" value="Hello"/></div>' +
+	var editorMarkup = '<div class="winnav"><input type="button" value="Preset"/><input type="button" value="Edit"/><input type="button" value="Settings"/><div class="winnavSpacer"></div><input type="button" value="Help"/></div>' +
 				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" />' +
 				'<input type="button" value=" + " onclick="document.getElementById(\'newEffectListHost\').style.display = \'block\';" /><div class="menu" id="newEffectListHost"><ul></ul></div>' +
 				'<input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"></div></div>' +
@@ -682,11 +682,11 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			//break;
 		case control_radio:
 			for (var o in typeInfo.options) {
-				output += '<label>' + typeInfo.options[o] + '<input type="radio" name="' + thisID + '"' + (o == data ? ' checked' : '') + '/></label> ';
+				output += '<label>' + typeInfo.options[o] + '<input type="radio" id="' + thisID + '"' + (o == data ? ' checked' : '') + ' value="' + o + '" onchange="updatePreset(event)" /></label> ';
 			}
 			break;
 		case control_check:
-			output += '<input type="checkbox" name="' + thisID + '"' + (data ? ' checked' : '') + '/>';
+			output += '<input type="checkbox" id="' + thisID + '"' + (data ? ' checked' : '') + ' onchange="updatePreset(event)" />';
 			break;
 		case control_colour:
 			//break;
@@ -839,7 +839,12 @@ function removeSelected() {
 }
 
 function updatePreset(e) {
-	var newValue = e.target.value;
+	if (e.target.type && e.target.type == "checkbox") {
+		var newValue = e.target.checked;
+	} else {
+		var newValue = e.target.value;
+	}
+
 	if (e.target.id.indexOf('_') != -1) { //popped out element
 		var tmpID = e.target.id.split('_');
 		var tree = tmpID[0];
@@ -868,7 +873,7 @@ function updatePreset(e) {
 				node = node.components[treePos[i]];
 			}
 		}
-		if (effect.substr('-')) {
+		if (effect.indexOf('-') != -1) {
 			effect = effect.split('-');
 			node[effect[0]][effect[1]] = newValue;
 		} else {
@@ -999,6 +1004,7 @@ function init() {
 	fetchPreset();
 
 	newEditorWindow();
+
 	//We need some way of registering windows onload, that'll let us add them to menus and stuff if they want to be placed on one.
 }
 
