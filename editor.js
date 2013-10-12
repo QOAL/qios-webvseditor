@@ -673,7 +673,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			//
 			break;
 		case control_code:
-			output += '<div class="popOutLink" onclick="popOutThis(event);">\u2197</div><textarea id="' + thisID + '" style="width:100%;height:' + (typeInfo.height ? typeInfo.height : '50') + 'px;resize:vertical;" onchange="updatePreset(event)">' + data + '</textarea>';
+			output += '<div class="popOutLink" onclick="popOutThis(event);">\u2197</div><textarea id="' + thisID + '" style="width:100%;height:' + (typeInfo.height ? typeInfo.height : '50') + 'px;resize:vertical;" spellcheck="false" onchange="updatePreset(event)">' + data + '</textarea>';
 			break;
 		case control_text:
 			output += '<input id="' + thisID + '" type="text" onchange="updatePreset(event)" value="' + data + '"/>';
@@ -753,7 +753,7 @@ function popOutThis(e) {
 		var effectData = node[effectID];
 	}
 
-	var popoutMarkup = '<div class="popoutHost"><textarea class="popoutElement" id="' + popID + '" onchange="updatePreset(event)" wrap="off">' + (effectData ? effectData : '') + '</textarea><div class="popoutStatusBar" onclick="selectFromPopout(event)" title="Click to select this effect in the editor">' + treeTrail + '</div></div>';
+	var popoutMarkup = '<div class="popoutHost"><textarea class="popoutElement" id="' + popID + '" onchange="updatePreset(event)" wrap="off" spellcheck="false">' + (effectData ? effectData : '') + '</textarea><div class="popoutStatusBar" onclick="selectFromPopout(event)" title="Click to select this effect in the editor">' + treeTrail + '</div></div>';
 	var wID = newWindow({"caption": selectedEffect.textContent + ' &gt; ' + e.target.parentNode.childNodes[0].textContent, "icon": "icon.png", "width": 320, "height": 320, "resizeable": true, "form": popoutMarkup, "close": popOutCloseThis});
 	windows[wID].popID = [selectedEffect.id, effectID];
 }
