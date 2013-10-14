@@ -311,10 +311,6 @@ li.menuspacer {
 	z-index: 1000;
 }
 
-#taskmenu {
-	display: none;
-}
-
 #trayclock  {
 	position: absolute;
 	right: 5px;
@@ -600,10 +596,6 @@ div.pbm {
 	border: none;
 	overflow: scroll;
 	resize: none;
-}
-
-#newEffectListHost {
-	display: none;
 }
 
 /* END APPLICATION CSS */

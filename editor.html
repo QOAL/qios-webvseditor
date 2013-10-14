@@ -10,16 +10,11 @@
 	<div id="area">
 		<div id="windowcontainer"></div>
 		<div id="taskbar">
-			<div id="taskmenuButton" onclick="showMenu(event, '#taskmenu', '0px', null, null, '22px');"></div>
+			<div id="taskmenuButton" onclick="showMenu(event, 1, '0px', null, null, '22px');"></div>
 			<div id="appholder"></div>
 			<div id="trayclock"></div>
 		</div>
-		<div id="taskmenu"><ul>
-			<li onclick="newWindow({'caption': 'Blank window', 'icon': '16x16x8_.png', 'height': 100});hideMenu();"/><div class="menuicon"></div>New blank window</li>
-			<li onclick="newEditorWindow();hideMenu();"><div class="menuicon" style="background:url(icon.png);"></div>WebVS Editor</li>
-			<!--<li><div class="menuspacer"></div></li>-->
-		</ul></div>
-		<div id="globalMenu" class="menu"></div>
+		<div id="globalMenu" class="menu" onclick="hideMenu();"></div>
 	</div>
 </body>
 </html>

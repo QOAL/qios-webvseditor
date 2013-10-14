@@ -12,6 +12,18 @@ var reorderEffect = null, tmpEffect = null, dummyEffect = null, blockEffectMove 
 
 var poppedOut = [];
 
+var editorMenuActive = false;
+var navGlobalPos = {'navPreset': 3, 'navEdit': 4, 'navSettings': 5, 'navHelp': 6};
+var globalMenus = [
+	'',
+	'<ul><li onclick="newWindow({\'caption\': \'Blank window\', \'icon\': \'16x16x8_.png\', \'height\': 100});"/><div class="menuicon"></div>New blank window</li><li onclick="newEditorWindow();"><div class="menuicon" style="background:url(icon.png);"></div>WebVS Editor</li></ul>',
+	'',
+	'<ul><li>Load</li><li>Save</li><li class="menuspacer"></li><li>New</li></ul>',
+	'<ul><li>Undo</li><li>Redo</li></ul>',
+	'<ul><li>Display</li><li>Fullscreen</li><li>Presets/Hotkeys</li><li>Beat Detection</li><li>Transistions</li><li class="menuspacer"></li><li>Debug Window...</li></ul>',
+	'<ul><li>Expression help</li><li class="menuspacer"></li><li>About...</li></ul>'
+];
+
 /*
 	Look at using flexbox for layout
 
@@ -257,9 +269,8 @@ function mousedown(e) {
 	while (tEle && tEle != gMenu) {
 		tEle = tEle.parentNode;
 	}
-	if (tEle != gMenu) { //If we haven't landed on the global menu, hide it.
-		gMenu.style.display = 'none';
-	}
+	//If we haven't landed on the global menu, hide it.
+	if (tEle != gMenu) { hideMenu(); }
 
 	if (selectedEle && selectedEle.id && selectedEle.className == "titlebar" && e.which == 1) { mdti = selectedEle.id.substr(1); };
 
@@ -515,15 +526,24 @@ function buildEditor(wID) {
 function newEditorWindow() {
 	//Need to make sure there is only one of these at a time!
 	//newWindow({"caption": "WebVS Editor", "icon": "brush_light_icon.png", "width": 640, "height": 480, "resizeable": true, "init": function() { buildEditor(this.wID)}});
-	var editorMarkup = '<div class="winnav"><input type="button" value="Preset"/><input type="button" value="Edit"/><input type="button" value="Settings"/><div class="winnavSpacer"></div><input type="button" value="Help"/></div>' +
+	var editorMarkup = '<div class="winnav"><input type="button" value="Preset" id="navPreset" /><input type="button" value="Edit" id="navEdit" /><input type="button" value="Settings" id="navSettings" /><div class="winnavSpacer"></div><input type="button" value="Help" id="navHelp" /></div>' +
 				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" />' +
-				'<input type="button" value=" + " onclick="showMenu(event, \'#newEffectListHost\');" /><div class="menu" id="newEffectListHost"><ul></ul></div>' +
+				'<input type="button" value=" + " onclick="showMenu(event, 2);" />' +
 				'<input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"></div></div>' +
 				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
 				'<div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
-	newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree});
+	var wID = newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree});
 
 	buildEffectMenu();
+
+	//We need to attach some listeners to the nav bar buttons.
+	var menuBar = document.getElementById('f' + wID).childNodes[0].childNodes;
+	for (var i = 0; i < menuBar.length; i++) {
+		if (menuBar[i].tagName == "INPUT") {
+			eventHook(menuBar[i], "click", showEditorNavMenu);
+			eventHook(menuBar[i], "mouseover", showEditorNavMenu);
+		}
+	}
 }
 
 function showMenu(e, markup, left, top, right, bottom) {
@@ -532,8 +552,13 @@ function showMenu(e, markup, left, top, right, bottom) {
 	if (e.stopPropagation) e.stopPropagation();
 
 	if (!markup) { return; }
-	if (typeof markup != "string" && markup.innerHTML) { markup = markup.innerHTML; }
-	if (markup.substr(0, 1) == '#') { markup = document.getElementById(markup.substr(1)).innerHTML; }
+	if (typeof markup == "number" && globalMenus[markup]) {
+		markup = globalMenus[markup];
+	} else if (typeof markup != "string" && markup.innerHTML) { //Remove this option
+		markup = markup.innerHTML;
+	} else if (markup.substr(0, 1) == '#') {
+		markup = document.getElementById(markup.substr(1)).innerHTML;
+	}
 
 	if (!right) {
 		gMenu.style.left = (left ? left : e.pageX + 2 + "px");
@@ -556,6 +581,31 @@ function showMenu(e, markup, left, top, right, bottom) {
 
 function hideMenu() {
 	gMenu.style.display = 'none';
+	editorMenuActive = false;
+}
+
+function showEditorNavMenu(e) {
+	//Check we're getting the correct events and that this function should be firing for them
+	if (e.type != "click" && e.type != "mouseover") { return; }
+	if (e.type == "mouseover" && !editorMenuActive) { return; }
+
+	//Check we have a valid nav menu button and associated menu
+	var targetId = e.target && e.target.id ? e.target.id : null;
+	if (!navGlobalPos[targetId]) { return; }
+
+	editorMenuActive = true;
+
+	//Calculate where to show the menu
+	var tmpLeft = e.target.offsetLeft;
+	var tmpTop = e.target.offsetTop + e.target.offsetHeight + 1;
+	var tmpEl = e.target.offsetParent;
+	while (tmpEl != null) {
+		tmpLeft += tmpEl.offsetLeft;
+		tmpTop += tmpEl.offsetTop;
+		tmpEl = tmpEl.offsetParent;
+	}
+
+	showMenu(e, navGlobalPos[targetId], tmpLeft + "px", tmpTop + "px");
 }
 
 function setTrayClock() {
@@ -911,13 +961,10 @@ function updatePreset(e) {
 }
 
 function addThisEffect(e) {
-	hideMenu();
-
 	//If the tree has no selected elements, then it inserted after the Main node
 	//If the selected element is an effects list then the effect is insert as the first child in that list
 	//Otherwise it is inserted before the selected effect
 	if (!e.target.id || e.target.id.substr(0, 5) != 'menu-') { return; }
-	document.getElementById('newEffectListHost').style.display = 'none';
 
 	var newNode = {"type": e.target.id.substr(5)}; //Basic stub node. Unsure if this is okay for the long term.
 	if (e.target.id.substr(5) == 'EffectList') { //Effect Lists need a bit more fleshing out to be funcational
@@ -988,7 +1035,7 @@ function buildEffectMenu() {
 	for (var k in menu["_"]) {
 		markup += '<li id="menu-' + menu["_"][k] + '" onclick="addThisEffect(event)">' + effectInfo[menu["_"][k]].name + '</li>';
 	}
-	document.getElementById('newEffectListHost').childNodes[0].innerHTML = markup;
+	globalMenus[2] = '<ul>' + markup + '</ul>';
 }
 
 function fetchPreset() {
@@ -1021,7 +1068,6 @@ function init() {
 		area.style.width = window.innerWidth + "px";
 	}; wrf();
 	eventHook(window, "resize", wrf);*/
-	//eventHook(document, "click", hideMenu); //And other stuff? hmmm :S
 	eventHook(document, "keypress", keypress);
 	//eventHook(document, "mouseover", areaVis);
 	//eventHook(document, "mouseout", areaVis);
