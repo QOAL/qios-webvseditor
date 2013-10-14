@@ -6,7 +6,7 @@ var mdwi = -1;
 var wrid = -1; //Window resize ID
 var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-var area;
+var area, gMenu;
 var selectedEffect = null;
 var reorderEffect = null, tmpEffect = null, dummyEffect = null, blockEffectMove = false, currentEffectOrder = [];
 
@@ -252,10 +252,15 @@ function mousedown(e) {
 	} else {
 		var selectedEle = e.target;
 	}
-	if (selectedEle.className || selectedEle.parentNode.parentNode.className != "menu") { //I don't really like this menu hiding code.
-		document.getElementById('taskmenu').style.display = 'none';
-		if (!selectedEle.id || selectedEle.id.substr(0, 5) != 'menu-') { document.getElementById('newEffectListHost').style.display = 'none'; }
+
+	var tEle = selectedEle; //Climb up the tree
+	while (tEle && tEle != gMenu) {
+		tEle = tEle.parentNode;
 	}
+	if (tEle != gMenu) { //If we haven't landed on the global menu, hide it.
+		gMenu.style.display = 'none';
+	}
+
 	if (selectedEle && selectedEle.id && selectedEle.className == "titlebar" && e.which == 1) { mdti = selectedEle.id.substr(1); };
 
 	while (selectedEle && selectedEle.className.substr(0, 6) != 'window' && selectedEle != null && selectedEle != document.body) {
@@ -512,7 +517,7 @@ function newEditorWindow() {
 	//newWindow({"caption": "WebVS Editor", "icon": "brush_light_icon.png", "width": 640, "height": 480, "resizeable": true, "init": function() { buildEditor(this.wID)}});
 	var editorMarkup = '<div class="winnav"><input type="button" value="Preset"/><input type="button" value="Edit"/><input type="button" value="Settings"/><div class="winnavSpacer"></div><input type="button" value="Help"/></div>' +
 				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" />' +
-				'<input type="button" value=" + " onclick="document.getElementById(\'newEffectListHost\').style.display = \'block\';" /><div class="menu" id="newEffectListHost"><ul></ul></div>' +
+				'<input type="button" value=" + " onclick="showMenu(event, \'#newEffectListHost\');" /><div class="menu" id="newEffectListHost"><ul></ul></div>' +
 				'<input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"></div></div>' +
 				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
 				'<div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
@@ -521,17 +526,36 @@ function newEditorWindow() {
 	buildEffectMenu();
 }
 
-function toggleTaskMenu(e) {
+function showMenu(e, markup, left, top, right, bottom) {
 	if (!e) var e = window.event;
 	e.cancelBubble = true;
 	if (e.stopPropagation) e.stopPropagation();
 
-	taskMenu = document.getElementById('taskmenu').style;
-	taskMenu.display = taskMenu.display == 'block' ? 'none' : 'block';
+	if (!markup) { return; }
+	if (typeof markup != "string" && markup.innerHTML) { markup = markup.innerHTML; }
+	if (markup.substr(0, 1) == '#') { markup = document.getElementById(markup.substr(1)).innerHTML; }
+
+	if (!right) {
+		gMenu.style.left = (left ? left : e.pageX + 2 + "px");
+		gMenu.style.right = '';
+	} else {
+		gMenu.style.right = right;
+		gMenu.style.left = '';
+	}
+	if (!bottom) {
+		gMenu.style.top = (top ? top : e.pageY + 2 + "px");
+		gMenu.style.bottom = '';
+	} else {
+		gMenu.style.bottom = bottom;
+		gMenu.style.top = '';
+	}
+
+	gMenu.innerHTML = markup;
+	gMenu.style.display = 'block';
 }
 
-function hideTaskMenu() {
-	document.getElementById('taskmenu').style.display = 'none';
+function hideMenu() {
+	gMenu.style.display = 'none';
 }
 
 function setTrayClock() {
@@ -887,6 +911,8 @@ function updatePreset(e) {
 }
 
 function addThisEffect(e) {
+	hideMenu();
+
 	//If the tree has no selected elements, then it inserted after the Main node
 	//If the selected element is an effects list then the effect is insert as the first child in that list
 	//Otherwise it is inserted before the selected effect
@@ -985,6 +1011,7 @@ function fetchPreset() {
 
 function init() {
 	area = document.getElementById("area");
+	gMenu = document.getElementById("globalMenu");
 	eventHook(document, "mousemove", mousemove);
 	eventHook(document, "mousedown", mousedown);
 	eventHook(document, "mouseup", mouseup);
@@ -994,7 +1021,7 @@ function init() {
 		area.style.width = window.innerWidth + "px";
 	}; wrf();
 	eventHook(window, "resize", wrf);*/
-	//eventHook(document, "click", hideTaskMenu); //And other stuff? hmmm :S
+	//eventHook(document, "click", hideMenu); //And other stuff? hmmm :S
 	eventHook(document, "keypress", keypress);
 	//eventHook(document, "mouseover", areaVis);
 	//eventHook(document, "mouseout", areaVis);

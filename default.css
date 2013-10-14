@@ -305,11 +305,14 @@ li.menuspacer {
 	background: transparent !important;
 }
 
-#taskmenu {
+#globalMenu {
 	display: none;
 	position: absolute;
-	bottom: 22px;
-	z-index: 1001;
+	z-index: 1000;
+}
+
+#taskmenu {
+	display: none;
 }
 
 #trayclock  {
@@ -601,10 +604,6 @@ div.pbm {
 
 #newEffectListHost {
 	display: none;
-	position: absolute;
-	top: 4px;
-	left: 25px;
-	z-index: 1001;
 }
 
 /* END APPLICATION CSS */
