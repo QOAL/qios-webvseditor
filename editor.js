@@ -79,7 +79,7 @@ var effectInfo = {
 			"audioChannel": { label: "Channel:", control: control_radio, "options": ["Left", "Centre", "Right"], "default": 1 },
 			"lineType": { label: "Draw as:", control: control_radio, "options": ["Dots", "Lines"], "default": 1},
 			"colour": {
-				"count": { label: "Cycle through", control: control_number },
+				"count": { label: "Cycle through", control: control_number, "min": 1, "max": 16, "default": 1 },
 				"list": { label: "Colours (Max 16)", control: control_colour_bar}
 			}
 		}
@@ -677,9 +677,10 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			break;
 		case control_text:
 			output += '<input id="' + thisID + '" type="text" onchange="updatePreset(event)" value="' + data + '"/>';
-			//break;
+			break;
 		case control_number:
-			//break;
+			output += '<input id="' + thisID + '" type="number"' + (typeInfo.min ? ' min="' + typeInfo.min + '"' : '') + ' ' + (typeInfo.max ? ' max="' + typeInfo.max + '"' : '') + ' onchange="updatePreset(event)" value="' + (parseInt(data) == data ? data : typeInfo.default) + '"/>';
+			break;
 		case control_radio:
 			for (var o in typeInfo.options) {
 				output += '<label>' + typeInfo.options[o] + '<input type="radio" id="' + thisID + '"' + (o == data ? ' checked' : '') + ' value="' + o + '" onchange="updatePreset(event)" /></label> ';
@@ -875,6 +876,7 @@ function updatePreset(e) {
 		}
 		if (effect.indexOf('-') != -1) {
 			effect = effect.split('-');
+			if (!node[effect[0]]) { node[effect[0]] = []; }
 			node[effect[0]][effect[1]] = newValue;
 		} else {
 			node[effect] = newValue;

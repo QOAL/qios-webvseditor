@@ -675,16 +675,20 @@ input[type=button]:active {
 input[type=text]:hover, textarea:hover { border-color: #1bcbd9; }
 input[type=text]:focus, textarea:focus { border-color: #bcbcb1; }*/
 
-input[type=text], textarea {
+input[type=text], input[type=number], textarea {
 	color: #000;
 	background: #fff;
 	border: 1px #c8c8c8 solid;
 	border-radius: 3px;
 }
 
-input[type=text]{
+input[type=text] {
 	/*height: 1.25em;*/
 	width: 20em;
+	padding-left: 2px;
+}
+input[type=number] {
+	width: 3em;
 	padding-left: 2px;
 }
 
@@ -692,7 +696,7 @@ textarea {
 	padding: 2px;
 }
 
-input[type=text]:hover, textarea:hover {
+input[type=text]:hover, input[type=number]:hover, textarea:hover {
 	border: 1px #a8a8a8 solid;
 }
 
