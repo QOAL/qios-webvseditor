@@ -34,6 +34,8 @@ var globalMenus = [
 	Oh yeah, this editor should have language support I guess
 
 	It would be cool to have a little icon for each element type.
+
+	Need to add a resize handle to the gap between the editor tree and the effect pane
 */
 
 //Enumerate some stuff
@@ -120,7 +122,7 @@ var effectInfo = {
 	}
 };
 
-var preset = {};
+var preset = {}; //{"clearFrame": false,"components": []}
 
 
 //From http://www.somacon.com/p355.php
@@ -530,12 +532,14 @@ function newEditorWindow() {
 	var editorMarkup = '<div class="winnav"><input type="button" value="Preset" id="navPreset" /><input type="button" value="Edit" id="navEdit" /><input type="button" value="Settings" id="navSettings" /><div class="winnavSpacer"></div><input type="button" value="Help" id="navHelp" /></div>' +
 				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" />' +
 				'<input type="button" value=" + " onclick="showMenu(event, 2);" />' +
-				'<input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"></div></div>' +
+				'<input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"><div id="treeSelectedBG"></div><ul></ul></div></div>' +
 				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
 				'<div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
 	var wID = newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree});
 
 	buildEffectMenu();
+
+	eventHook(document.getElementById('editorTree'), 'scroll', moveSelectedBG);
 
 	//We need to attach some listeners to the nav bar buttons.
 	var menuBar = document.getElementById('f' + wID).childNodes[0].childNodes;
@@ -645,15 +649,15 @@ function setTrayClock() {
 function buildEditorTree() {
 	if (!preset.components) { alert('What is up with this preset?'); return; }
 
-	document.getElementById('editorTree').innerHTML = ''; //Clear the tree
+	document.getElementById('editorTree').childNodes[1].innerHTML = ''; //Clear the tree
 
-	var newEffect = document.createElement('div');
+	var newEffect = document.createElement('li');
 	newEffect.innerHTML = 'Main';
 	newEffect.id = "ET-Main";
 	eventHook(newEffect, 'click', displayEffectView);
-	document.getElementById('editorTree').appendChild(newEffect);
+	document.getElementById('editorTree').childNodes[1].appendChild(newEffect);
 
-	recursiveTreePopulate(preset.components, document.getElementById('editorTree'), 'ET');
+	recursiveTreePopulate(preset.components, document.getElementById('editorTree').childNodes[1], 'ET');
 
 	if (selectedEffect && typeof selectedEffect == "string") {
 		selectedEffect = document.getElementById(selectedEffect);
@@ -664,7 +668,7 @@ function buildEditorTree() {
 function recursiveTreePopulate(branch, parent, id) {
 	for (i in branch) {
 		//console.log(i, branch[i]);
-		var newEffect = document.createElement('div');
+		var newEffect = document.createElement('li');
 		newEffect.id = id + '-' + i;
 		var treeName = '';
 		if (typeof effectInfo[branch[i].type] != 'undefined') {
@@ -672,12 +676,18 @@ function recursiveTreePopulate(branch, parent, id) {
 		} else {
 			treeName = effectInfo.unknown.name + ' (' + branch[i].type + ')';
 		}
-		newEffect.innerHTML = lameHTMLSpecialChars(treeName);
+		if (branch[i].type == 'EffectList') {
+			newEffect.innerHTML = '<span onclick="toggleCollapseList(event)"></span>' + lameHTMLSpecialChars(treeName);
+		} else {
+			newEffect.innerHTML = lameHTMLSpecialChars(treeName);
+		}
 		eventHook(newEffect, 'click', displayEffectView);
 		parent.appendChild(newEffect);
 
 		if (branch[i].type == 'EffectList') {
-			recursiveTreePopulate(branch[i].components, newEffect, id + '-' + i);
+			var newList = document.createElement('ul');
+			newEffect.appendChild(newList);
+			recursiveTreePopulate(branch[i].components, newList, id + '-' + i);
 			newEffect.setAttribute('class', 'effectTree');
 		}
 	}
@@ -688,14 +698,66 @@ function displayEffectView(e) {
 	e.cancelBubble = true;
 	if (e.stopPropagation) e.stopPropagation();
 
-	if (e.layerY > 18 && e.target.getAttribute('class') && e.target.getAttribute('class').indexOf('effectTree') != -1) { return; }
+	//We'd need to walk the tree to figure out where this element is and compare with layerY
+	//If it's below the Effect List element, then we could fire a click event on the correct child element
+	//   doing that would give us the benefit of the div/padding based list with less silly css
+	//if (e.layerY > 18 && e.target.getAttribute('class') && e.target.getAttribute('class').indexOf('effectTree') != -1) { console.log(e); return; }
+	if (e.target.getAttribute('class') && e.target.getAttribute('class').indexOf('effectTree') != -1) {
+		//We need to walk up, to work out where this effects list starts
+		//Then, if we have more then 20 pixels left over, walk down this effect list (recursively) to find the correct child and click it.
+		var tmpTop = e.target.offsetTop;
+		var tmpEl = e.target.offsetParent;
+		while (tmpEl != document.getElementById('editorTree')) {
+			tmpTop += tmpEl.offsetTop;
+			tmpEl = tmpEl.offsetParent;
+		}
+		var adjustedLayerY = e.layerY - tmpTop - 18;
+
+		if (adjustedLayerY > 0) {
+			tmpEl = e.target.childNodes[2]; //Start at the 3rd child - avoids the collapse span + "Effect list" text
+			for (var i = 0; i < tmpEl.childNodes.length; i++) {
+				if (adjustedLayerY - tmpEl.childNodes[i].offsetHeight < 1) {
+					if (tmpEl.childNodes[i].childNodes && adjustedLayerY > 20) {
+						//be recursive - Yes this is a crappy way of achieving it.
+						adjustedLayerY -= 18; //We're using 18 because the height should 20, but there is 2 padding - Yes.
+						tmpEl = tmpEl.childNodes[i].childNodes[2];
+						i = -1;
+						continue;
+					} else {
+						//send click
+						var evt = document.createEvent("MouseEvents");
+						evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+						tmpEl.childNodes[i].dispatchEvent(evt);
+						return;
+					}
+					break;
+				} else {
+					adjustedLayerY -= tmpEl.childNodes[i].offsetHeight;
+				}
+			}
+		}
+	}
 
 	if (selectedEffect) { //remove selected state from the current element
 		if (selectedEffect == e.target) { return; } //No point building the pane again in this case.
 		selectedEffect.setAttribute('class', selectedEffect.getAttribute('class') && selectedEffect.getAttribute('class').indexOf('effectTree') != -1 ? 'effectTree' : '');
 	}
 
-	var treePos = e.target.id.substr(3).split("-");
+	selectedEffect = e.target.tagName == 'SPAN' ? e.target.parentNode : e.target; //add the selected state to the chosen element
+	selectedEffect.setAttribute('class', (selectedEffect.getAttribute('class') && selectedEffect.getAttribute('class').indexOf('effectTree') != -1 ? 'effectTree ' : '') + 'selectedEffect');
+
+	//Move the selected BG element to the correct location
+	var tmpTop = selectedEffect.offsetTop;
+	var tmpEl = selectedEffect.offsetParent;
+	while (tmpEl != document.getElementById('editorTree')) {
+		tmpTop += tmpEl.offsetTop;
+		tmpEl = tmpEl.offsetParent;
+	}
+	document.getElementById('editorTree').childNodes[0].style.display = "block";
+	document.getElementById('editorTree').childNodes[0].style.top = tmpTop + "px";
+
+	//Walk the tree to our selected effect, then build its pane
+	var treePos = selectedEffect.id.substr(3).split("-");
 	var thisEffectHTML = '';
 	if (treePos == 'Main') {
 		var thisEffect = effectInfo.Main;
@@ -732,9 +794,18 @@ function displayEffectView(e) {
 	document.getElementById('effectContainer').scrollTop = 0;
 	document.getElementById('effectContainer').innerHTML = thisEffectHTML;
 	document.getElementById('effectTitle').innerHTML = thisEffect.name;
+}
 
-	selectedEffect = e.target; //add the selected state to the chosen element
-	selectedEffect.setAttribute('class', (selectedEffect.getAttribute('class') && selectedEffect.getAttribute('class').indexOf('effectTree') != -1 ? 'effectTree ' : '') + 'selectedEffect');
+function moveSelectedBG() {
+	//This function is basically a hack because my brain is unable to figure out the CSS way to make the selected BG always cover tree width.
+	document.getElementById('editorTree').childNodes[0].style.left = document.getElementById('editorTree').scrollLeft + "px";
+}
+
+function toggleCollapseList(e) {
+	if (!e.target || !e.target.parentNode || !e.target.parentNode.childNodes[2]) { return; }
+	var tmpList = e.target.parentNode.childNodes[2];
+	tmpList.style.display = tmpList.style.display == 'none' ? '' : 'none';
+	e.target.setAttribute('class', tmpList.style.display == 'none' ? 'collapsed' : '');
 }
 
 /*function recursivePaneBuild(effect, node, output) {
@@ -832,7 +903,7 @@ function popOutThis(e) {
 	if (effectID.substr('-')) {
 		effectID = effectID.split('-');
 		var effectElement = effectInfo[node.type].pane[effectID[0]][effectID[1]];
-		var effectData = node[effectID[0]][effectID[1]];
+		var effectData = node[effectID[0]] ? node[effectID[0]][effectID[1]] : '';
 	} else {
 		var effectElement = effectInfo[node.type].pane[effectID];
 		var effectData = node[effectID];

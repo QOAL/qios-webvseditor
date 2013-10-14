@@ -426,6 +426,7 @@ div.pbm {
 }
 
 #editorTree {
+	position: relative;
 	background: #fff;
 	height: calc(100% - 29px);
 	margin: 3px;
@@ -434,32 +435,61 @@ div.pbm {
 	overflow: auto;
 }
 
-#editorTree div {
-	margin: 2px 0;
-	padding: 2px 0 2px 5px;
-}
-/*#editorTree div:hover {
-	background: rgba(148,194,242,.25);
-}
-#editorTree div:active {
-	background: rgba(148,194,242,.5);
-}*/
-.selectedEffect {
+#treeSelectedBG {
+	display: none;
+	position: absolute;
+	width: 100%;
+	height: 20px;
 	background: rgba(148,194,242,.5);
 	background: linear-gradient(to bottom, rgba(148,194,242,.375) 0%, rgba(148,194,242,.5) 45%, rgba(148,194,242,.625) 55%, rgba(148,194,242,.375) 100%);
+}
+
+#editorTree li {
+	line-height: 16px;
+	padding: 2px 0 2px 5px;
+	white-space: nowrap;
+}
+
+#editorTree ul {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+
+#editorTree li.effectTree {
+	padding-bottom: 0;
+}
+
+#editorTree > ul ul {
+	margin-left: 10px;
+}
+
+#editorTree > ul { /* This margin is to help when moving items to the bottom of the list */
+	position: relative;
+	display: table;
+	margin-bottom: 20px;
+}
+
+.selectedEffect {
 	text-shadow: 0 1px rgba(255,255,255,.5);
 }
-.effectTree.selectedEffect {
-	background-size: 100% 18px; /*The height here is lame, we're really dependant on things being a fixed pixel height right now*/
-	background-repeat: no-repeat;
+
+#editorTree .effectTree span {
+	padding-left: 14px;
+	padding: 3px 0 3px 14px;
+	background: radial-gradient(6px at center, rgba(48,48,48,0) 35%, rgba(48,48,48,0) 55%, #303030 55%, #303030 65%, rgba(48,48,48,0) 80%) 0 4px no-repeat;
+	background-size: 12px 12px;
 }
-#editorTree .effectTree {
-	/**/
-	margin-bottom: 0;
-	padding-bottom: 0;
-	position: relative;
+
+#editorTree .effectTree span.collapsed {
+	background-image: radial-gradient(6px at center, #303030 20%, rgba(48,48,48,0) 35%);
 }
-#editorTree .effectTree div {
+
+#editorTree .effectTree span:hover {
+	background-image: radial-gradient(6px at center, #303030 20%, rgba(48,48,48,0) 35%, rgba(48,48,48,0) 55%, #303030 55%, #303030 65%, rgba(48,48,48,0) 80%);
+}
+/*#editorTree div:not(.effectTree) { text-indent: 0; }*/
+/*#editorTree .effectTree div {
 	margin: 2px 0 2px -5px;
 	padding-left: 15px;
 }
@@ -485,40 +515,15 @@ div.pbm {
 	display: inline-block;
 	margin-left:-6px;
 	margin-right: 2px;
-}
+}*/
 #editorTree .effectTree div:last-child:before { /* Some AA for the last tree node */
 	box-shadow: -1px 0 0 rgba(0, 0, 0, .211); /*rgba(168, 168, 168, .625)*/
 }
-#editorTree .effectTree div:last-of-type{
+/*#editorTree .effectTree div:last-of-type{
 	margin-bottom: 0;
-}
+}*/
 .dummyEffect {
 	opacity: .625;
-}
-/*
-	Oh dear, this is stupid.
-	This CSS corrects the indentation for nested effect lists
-	It fixes being able to click the left side + the selected BG
-*/
-#editorTree .effectTree .effectTree div {
-	margin: 2px 0 2px -20px;
-	padding-left: 30px;
-}
-#editorTree .effectTree .effectTree .effectTree div {
-	margin: 2px 0 2px -35px;
-	padding-left: 45px;
-}
-#editorTree .effectTree .effectTree .effectTree .effectTree div {
-	margin: 2px 0 2px -50px;
-	padding-left: 60px;
-}
-#editorTree .effectTree .effectTree .effectTree .effectTree .effectTree div {
-	margin: 2px 0 2px -65px;
-	padding-left: 75px;
-}
-#editorTree .effectTree .effectTree .effectTree .effectTree .effectTree .effectTree div {
-	margin: 2px 0 2px -80px;
-	padding-left: 90px;
 }
 
 #effectHost {
@@ -597,6 +602,9 @@ div.pbm {
 	line-height: 18px;
 	padding: 0 20px 0 5px;
 	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 .popoutHost textarea, .popoutHost textarea:hover {
 	width: 100%;
