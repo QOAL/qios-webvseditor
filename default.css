@@ -278,6 +278,8 @@ a:hover { text-decoration: none; }
 	left: 100%;
 }
 
+.menu li { min-width: 75px; }
+
 .menu li.subMenu {
 	padding-right: 15px;
 }
@@ -383,10 +385,19 @@ div.pbm {
 	align-items: stretch;*/
 }
 
-.winnav input[type=button]:not(:hover):not(:active) {
+.winnav input[type=button]:not(:hover):not(:active):not(.navActive) {
 	background: transparent;
 	border: 1px solid transparent;
 	box-shadow: none;
+}
+
+.winnav input[type=button].navActive {
+	background: linear-gradient(to bottom, #e3e3e3 0%, #dcdcdc 40%, #d4d4d4 60%, #cfcfcf 100%);
+	/*background: linear-gradient(to bottom, #f3f3f3 0%, #ececec 40%, #e4e4e4 60%, #dfdfdf 100%);*/
+	border: 1px solid #b0b0b0;
+	box-shadow: inset 0 0px 0 1px rgba(255,255,255,.5), inset 0 1px 2px 1px rgba(64,64,64,.25);
+	text-shadow: 0 0 3px #fff;/*, -1px 0 0 rgba(0,0,0,.25);*/
+	color: #000;
 }
 
 .winnav input { flex: 0 0 auto; }

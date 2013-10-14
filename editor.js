@@ -13,12 +13,13 @@ var reorderEffect = null, tmpEffect = null, dummyEffect = null, blockEffectMove 
 var poppedOut = [];
 
 var editorMenuActive = false;
+var editorMenuActiveElement = null;
 var navGlobalPos = {'navPreset': 3, 'navEdit': 4, 'navSettings': 5, 'navHelp': 6};
 var globalMenus = [
 	'',
 	'<ul><li onclick="newWindow({\'caption\': \'Blank window\', \'icon\': \'16x16x8_.png\', \'height\': 100});"/><div class="menuicon"></div>New blank window</li><li onclick="newEditorWindow();"><div class="menuicon" style="background:url(icon.png);"></div>WebVS Editor</li></ul>',
 	'',
-	'<ul><li>Load</li><li>Save</li><li class="menuspacer"></li><li>New</li></ul>',
+	'<ul><li>Load...</li><li>Save...</li><li class="menuspacer"></li><li>New</li></ul>',
 	'<ul><li>Undo</li><li>Redo</li></ul>',
 	'<ul><li>Display</li><li>Fullscreen</li><li>Presets/Hotkeys</li><li>Beat Detection</li><li>Transistions</li><li class="menuspacer"></li><li>Debug Window...</li></ul>',
 	'<ul><li>Expression help</li><li class="menuspacer"></li><li>About...</li></ul>'
@@ -581,7 +582,12 @@ function showMenu(e, markup, left, top, right, bottom) {
 
 function hideMenu() {
 	gMenu.style.display = 'none';
+
 	editorMenuActive = false;
+	if (editorMenuActiveElement) {
+		editorMenuActiveElement.setAttribute('class', '');
+		editorMenuActiveElement = null;
+	}
 }
 
 function showEditorNavMenu(e) {
@@ -594,6 +600,10 @@ function showEditorNavMenu(e) {
 	if (!navGlobalPos[targetId]) { return; }
 
 	editorMenuActive = true;
+
+	if (editorMenuActiveElement) { editorMenuActiveElement.setAttribute('class', ''); }
+	editorMenuActiveElement = e.target;
+	editorMenuActiveElement.setAttribute('class', 'navActive');
 
 	//Calculate where to show the menu
 	var tmpLeft = e.target.offsetLeft;
