@@ -10,6 +10,8 @@ var area, gMenu;
 var selectedEffect = null;
 var reorderEffect = null, tmpEffect = null, dummyEffect = null, blockEffectMove = false, currentEffectOrder = [];
 
+var resizeGripper = null;
+
 var poppedOut = [];
 
 var editorMenuActive = false;
@@ -214,6 +216,20 @@ function mousemove(e) {
 		windows[wrid].resize.y = mousePos[1];
 	}
 
+	if (resizeGripper != null) {
+		if (resizeGripper == 'treeEffectGrip') {
+			resizeTarget = document.getElementById('editorTreeHost');
+		}
+		var tmpLeft = resizeTarget.offsetLeft;
+		var tmpEl = resizeTarget.offsetParent;
+		while (tmpEl != null) {
+			tmpLeft += tmpEl.offsetLeft;
+			tmpEl = tmpEl.offsetParent;
+		}
+		resizeTarget.style.width = Math.min(document.getElementById('treeEffectHost').offsetWidth - 150, Math.max(150, mousePos[0] - tmpLeft)) + "px";
+		document.getElementById(resizeGripper).style.left = resizeTarget.offsetWidth + "px";
+	}
+
 	/* Effect ordering */
 	/*if (reorderEffect != null) {
 		var stageListY = 0;
@@ -275,6 +291,11 @@ function mousedown(e) {
 	//If we haven't landed on the global menu, hide it.
 	if (tEle != gMenu) { hideMenu(); }
 
+	if (selectedEle.getAttribute('class') == "resizeGrip") {
+		resizeGripper = selectedEle.id;
+		document.body.style.cursor = "col-resize";
+	}
+
 	if (selectedEle && selectedEle.id && selectedEle.className == "titlebar" && e.which == 1) { mdti = selectedEle.id.substr(1); };
 
 	while (selectedEle && selectedEle.className.substr(0, 6) != 'window' && selectedEle != null && selectedEle != document.body) {
@@ -329,6 +350,9 @@ function mouseup(e) {
 	if (wrid != -1 && e.button == 0) {
 		wrid = -1;
 		windows[wID].resize = {"state": 0, "x": 0, "y": 0};
+	}
+	if (resizeGripper != null) {
+		resizeGripper = null;
 	}
 	/*if (reorderEffect != null) {
 		reorderEffect = null;
@@ -522,19 +546,15 @@ function newWindow(info) {
 	return wID; //might be useful
 }
 
-function buildEditor(wID) {
-	//document.getElementById(wID + 'f').innerHTML += '<div class="winnav"><input type="button" value="&#9650;" title="Up" /><input type="text" /><input type="button" value="&#9654;" title="Go" /><input type="button" value="Hello"/></div><div class="wincontent"><div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div></div>';
-}
-
 function newEditorWindow() {
 	//Need to make sure there is only one of these at a time!
-	//newWindow({"caption": "WebVS Editor", "icon": "brush_light_icon.png", "width": 640, "height": 480, "resizeable": true, "init": function() { buildEditor(this.wID)}});
 	var editorMarkup = '<div class="winnav"><input type="button" value="Preset" id="navPreset" /><input type="button" value="Edit" id="navEdit" /><input type="button" value="Settings" id="navSettings" /><div class="winnavSpacer"></div><input type="button" value="Help" id="navHelp" /></div>' +
-				'<div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" />' +
+				'<div id="treeEffectHost"><div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" />' +
 				'<input type="button" value=" + " onclick="showMenu(event, 2);" />' +
 				'<input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"><div id="treeSelectedBG"></div><ul></ul></div></div>' +
+				'<div id="treeEffectGrip" class="resizeGrip"></div>' +
 				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
-				'<div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
+				'</div><div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
 	var wID = newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree});
 
 	buildEffectMenu();
@@ -701,7 +721,6 @@ function displayEffectView(e) {
 	//We'd need to walk the tree to figure out where this element is and compare with layerY
 	//If it's below the Effect List element, then we could fire a click event on the correct child element
 	//   doing that would give us the benefit of the div/padding based list with less silly css
-	//if (e.layerY > 18 && e.target.getAttribute('class') && e.target.getAttribute('class').indexOf('effectTree') != -1) { console.log(e); return; }
 	if (e.target.getAttribute('class') && e.target.getAttribute('class').indexOf('effectTree') != -1) {
 		//We need to walk up, to work out where this effects list starts
 		//Then, if we have more then 20 pixels left over, walk down this effect list (recursively) to find the correct child and click it.
@@ -719,7 +738,7 @@ function displayEffectView(e) {
 				if (adjustedLayerY - tmpEl.childNodes[i].offsetHeight < 1) {
 					if (tmpEl.childNodes[i].childNodes && adjustedLayerY > 20) {
 						//be recursive - Yes this is a crappy way of achieving it.
-						adjustedLayerY -= 18; //We're using 18 because the height should 20, but there is 2 padding - Yes.
+						adjustedLayerY -= 18; //We're using 18 because the height should be 20, but there is 2 padding - Yes.
 						tmpEl = tmpEl.childNodes[i].childNodes[2];
 						i = -1;
 						continue;
@@ -807,16 +826,6 @@ function toggleCollapseList(e) {
 	tmpList.style.display = tmpList.style.display == 'none' ? '' : 'none';
 	e.target.setAttribute('class', tmpList.style.display == 'none' ? 'collapsed' : '');
 }
-
-/*function recursivePaneBuild(effect, node, output) {
-	for (var i in node) {
-		if (typeof i == 'object' && effect[i]) {
-			recursivePaneBuild(effect[i], node[i], thisEffectHTML);
-		} else {
-			thisEffectHTML += i + ":" + node[i] + "<br />";
-		}
-	}
-}*/
 
 function buildPaneElement(typeInfo, data, name, parent) {
 	if (typeof data == 'undefined' || typeof typeInfo.control == 'undefined') { return ''; }

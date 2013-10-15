@@ -379,10 +379,6 @@ div.pbm {
 
 	display: flex;
 	flex-direction: row;
-	/*flex-wrap: nowrap;
-	justify-content: flex-start;
-	align-content: stretch;
-	align-items: stretch;*/
 }
 
 .winnav input[type=button]:not(:hover):not(:active):not(.navActive) {
@@ -413,11 +409,17 @@ div.pbm {
 	overflow: auto;
 }
 
+#treeEffectHost {
+	display: flex;
+	flex-direction: row;
+	height: 100%;
+}
+
 #editorTreeHost {
-	float: left;
 	height: calc(100% - 39px);
 	width: 200px;
 	position: relative;
+	flex: 0 0 auto;
 }
 
 #editorTreeButtons {
@@ -478,7 +480,7 @@ div.pbm {
 #editorTree .effectTree span {
 	padding-left: 14px;
 	padding: 3px 0 3px 14px;
-	background: radial-gradient(6px at center, rgba(48,48,48,0) 35%, rgba(48,48,48,0) 55%, #303030 55%, #303030 65%, rgba(48,48,48,0) 80%) 0 4px no-repeat;
+	background: radial-gradient(6px at center, rgba(72,72,72,0) 35%, rgba(72,72,72,0) 55%, #a8a8a8 55%, #a8a8a8 65%, rgba(72,72,72,0) 80%) 0 4px no-repeat;
 	background-size: 13px 13px;
 }
 
@@ -487,7 +489,7 @@ div.pbm {
 }
 
 #editorTree .effectTree span:hover {
-	background-image: radial-gradient(6px at center, #303030 20%, rgba(48,48,48,0) 35%, rgba(48,48,48,0) 55%, #303030 55%, #303030 65%, rgba(48,48,48,0) 80%);
+	background-image: radial-gradient(6px at center, #303030 20%, rgba(48,48,48,0) 35%, rgba(72,72,72,0) 55%, #a8a8a8 55%, #a8a8a8 65%, rgba(72,72,72,0) 80%);
 }
 
 #editorTree > ul ul:before {
@@ -526,11 +528,23 @@ div.pbm {
 	opacity: .625;
 }
 
+#treeEffectGrip {
+	width: 2px;
+	top: 45%;
+	bottom: 45%;
+	position: absolute;
+	border: 1px solid #c8c8c8;
+	background: #e0e0e0;
+	cursor: col-resize;
+	border-radius: 2.5px;
+	margin: 0 0 0 -2px;
+	box-shadow: 0 0 0 1px #f4f4f4;
+}
+
 #effectHost {
-	float: left;
-	width: calc(100% - 200px);
 	height: calc(100% - 39px);
 	overflow: hidden;
+	flex: 1 1 auto;
 }
 
 #effectHost fieldset {
