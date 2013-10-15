@@ -9,6 +9,7 @@ var months = ["January","February","March","April","May","June","July","August",
 var area, gMenu;
 var selectedEffect = null;
 var reorderEffect = null, tmpEffect = null, dummyEffect = null, blockEffectMove = false, currentEffectOrder = [];
+var reorderInitialY = 0;
 
 var resizeGripper = null;
 
@@ -230,51 +231,63 @@ function mousemove(e) {
 		document.getElementById(resizeGripper).style.left = resizeTarget.offsetWidth + "px";
 	}
 
-	/* Effect ordering */
-	/*if (reorderEffect != null) {
-		var stageListY = 0;
-		var tempEl = document.getElementById('editorTree');
-		while (tempEl.getAttribute('class') != 'window') {
-			stageListY += tempEl.offsetTop;
-			tempEl = tempEl.offsetParent;
+	if (reorderEffect) {
+		//Get the effect tree's absolute y position
+		var tmpTop = document.getElementById('editorTree').offsetTop;
+		var tmpLeft = document.getElementById('editorTree').offsetLeft + document.getElementById('editorTree').offsetWidth;
+		var tmpEl = document.getElementById('editorTree').offsetParent;
+		while (tmpEl != null) {
+			tmpTop += tmpEl.offsetTop;
+			tmpLeft += tmpEl.offsetLeft;
+			tmpEl = tmpEl.offsetParent;
 		}
-		var newY = mousePos[1] - stageListY - (document.getElementById('editorTree').childNodes[0].offsetHeight / 2) - ((document.body.scrollTop || document.documentElement.scrollTop));
-		var swapEle = -1;
-		var swapRoot = 'ET-';
-		var effectEles = document.getElementById('editorTree').childNodes;
-		var reorderEffectEle = document.getElementById(reorderEffect);
-		for (i = 0; i < effectEles.length; i++) {
-			if (effectEles[i] != reorderEffectEle) {
-				//if (i == effectEles.length - 1) { console.log(newY, reorderEffectEle.offsetTop, effectEles[i].offsetTop); }
-				if (newY > effectEles[i].offsetTop && reorderEffectEle.offsetTop < effectEles[i].offsetTop) {
-					swapEle = i;
+
+		if (!tmpEffect && Math.abs(reorderInitialY - mousePos[1]) > 10) {
+			tmpEffect = reorderEffect.cloneNode(true);
+			document.getElementById('ghostTree').style.display = "block";
+			document.getElementById('ghostTree').childNodes[0].insertBefore(tmpEffect, null);
+			//We'd like a hand cursor
+			document.body.style.cursor = "n-resize";
+			reorderEffect.style.opacity = .375;
+
+			dummyEffect = document.createElement('li');
+			dummyEffect.className = 'dummyEffect';
+			dummyEffect.textContent = '<Move Here>';
+			reorderEffect.parentNode.insertBefore(dummyEffect, reorderEffect);
+		}
+
+		/*document.getElementById('ghostTree').style.top = Math.max(10, Math.min(
+				document.getElementById('editorTree').childNodes[1].lastChild.offsetTop + 20,
+				(mousePos[1] - tmpTop + document.getElementById('editorTree').scrollTop - 10)
+			)) + "px";*/
+
+		document.getElementById('ghostTree').style.top = Math.max(tmpTop + Math.max(0, 20 - document.getElementById('editorTree').scrollTop), mousePos[1] - 10) + "px";
+		document.getElementById('ghostTree').style.left = tmpLeft + "px";
+
+		var adjustedLayerY =  Math.max(20, Math.min(document.getElementById('editorTree').childNodes[1].lastChild.offsetTop + 20,
+				(mousePos[1] - tmpTop + document.getElementById('editorTree').scrollTop - 10))) + 10;
+		var tmpEl = document.getElementById('editorTree').childNodes[1]; //Start at the 3rd child - avoids the collapse span + "Effect list" text
+		for (var i = 0; i < tmpEl.childNodes.length; i++) {
+			if (adjustedLayerY - tmpEl.childNodes[i].offsetHeight < 1) {
+				if (tmpEl.childNodes[i].childNodes && adjustedLayerY > 20 && tmpEl.childNodes[i] != reorderEffect) {
+					//be recursive - Yes this is a crappy way of achieving it.
+					console.log(tmpEl.childNodes[i].childNodes[2].offsetTop);
+					adjustedLayerY -= 20;
+					tmpEl = tmpEl.childNodes[i].childNodes[2];
+					i = -1;
+					continue;
+				} else {
+					//So a mixture of both of these should be what we need.
+					//tmpEl.childNodes[i].parentNode.insertBefore(dummyEffect, tmpEl.childNodes[i].nextSibling);
+					tmpEl.childNodes[i].parentNode.insertBefore(dummyEffect, tmpEl.childNodes[i]);
+					return;
 				}
-				if (newY < effectEles[i].offsetTop && reorderEffectEle.offsetTop > effectEles[i].offsetTop) {
-					swapEle = i;
-				}
-				if (effectEles[i].getAttribute('class') == 'effectTree' && newY > effectEles[i].offsetTop && newY < effectEles[i].offsetTop + effectEles[i].offsetHeight) {
-					swapEle = i;
-					if (swapRoot == 'ET-') { swapEle--; }
-					swapRoot += (i - 1) + '-';
-					//We're 
-					//console.log('In a list!');
-					//So now we need to work our where and be recursive
-				}
+				break;
+			} else {
+				adjustedLayerY -= tmpEl.childNodes[i].offsetHeight;
 			}
 		}
-		if (swapEle > -1) {
-			console.log(swapRoot + swapEle);
-			reorderEffectEle = document.getElementById(swapRoot + swapEle).parentNode.insertBefore(reorderEffectEle, document.getElementById(swapRoot + swapEle));
-			/*var swapElement = document.getElementById(swapRoot + swapEle);
-			t1 = reorderEffectEle.cloneNode(true);
-			t2 = swapElement.cloneNode(true);
-			reorderEffectEle.parentNode.replaceChild(t2, reorderEffectEle);
-			if (swapElement.parentNode == null) { return; }
-			swapElement.parentNode.replaceChild(t1, swapElement);
-			reorderEffectEle = t1;*/
-		//}
-	//}
-	/* */
+	}
 }
 
 function mousedown(e) {
@@ -307,38 +320,11 @@ function mousedown(e) {
 		sortWindowsZIndex(wID);
 	}
 
-	/*var effectEle = e.target || window.event.srcElement;
-	var testForEffect = effectEle;
-	while (testForEffect && testForEffect.parentNode && testForEffect.parentNode.id != 'editorTree' && testForEffect != null && testForEffect != document.body) {
-		testForEffect = testForEffect.parentNode;
+	var effectEle = e.target || window.event.srcElement;
+	if (effectEle.tagName == 'LI' && effectEle.id.substr(0, 3) == 'ET-' && effectEle.id != 'ET-Main') {
+		reorderEffect = effectEle;
+		reorderInitialY = mousePos[1];
 	}
-	if (e.button == 0 && !blockEffectMove && testForEffect.parentNode.id == "editorTree" && effectEle.id != "ET-Main") {
-		blockEffectMove = true;
-		if (reorderEffect != null) { mouseUp(e); }
-		displayEffectView(e);
-		currentStageOrder = Array(); nPos = 0;
-		for (i in document.getElementById('editorTree').childNodes) {
-			if (!isNaN(i) && document.getElementById('editorTree').childNodes[i]) {
-				currentStageOrder[nPos] = document.getElementById('editorTree').childNodes[i].id;//.substr(5)
-				++nPos;
-			}
-		}
-		reorderEffect = effectEle.id;
-		tempEl = effectEle.offsetParent;
-		blah = (document.body.scrollTop || document.documentElement.scrollTop) -
-			(document.getElementById('editorTree').scrollTop || document.getElementById('editorTree').scrollTop);
-		var stageListY = document.getElementById('editorTree').offsetTop;
-		tempEl = document.getElementById('editorTree').offsetParent;
-		while (tempEl.getAttribute('class') != 'window') {
-			stageListY += tempEl.offsetTop;
-			tempEl = tempEl.offsetParent;
-			//if (tempEl.getAttribute('class') == 'window') { stageListY += tempEl.offsetTop; }
-		}
-		//tmpEffect.style.top = mousePos[1] - stageListY - 9 - blah + "px";
-		//tmpEffect.style.top = mousePos[1] - stageListY + 5 - blah + "px";
-		//We'd like a hand cursor
-		document.body.style.cursor = "n-resize";
-	}*/
 }
 
 function mouseup(e) {
@@ -348,51 +334,26 @@ function mouseup(e) {
 		mdwi = -1;
 	}
 	if (wrid != -1 && e.button == 0) {
+		windows[wrid].resize = {"state": 0, "x": 0, "y": 0};
 		wrid = -1;
-		windows[wID].resize = {"state": 0, "x": 0, "y": 0};
 	}
 	if (resizeGripper != null) {
 		resizeGripper = null;
 	}
-	/*if (reorderEffect != null) {
-		reorderEffect = null;
-		//Okay now we need to:
-		// Reorder the stage names
-		// Reorder the performances
-		// Sort out the id="stage" numbering
-		// reapply listeners
-		//Rebuild the planner
-		
-		//plannerOld = clone(planner);
-		//editorTreeOld = editorTree.slice(0);
-		//stageColsOld = stageCols.slice(0);
-		newOrder = Array(); nPos = 0;
-		for (i in document.getElementById('editorTree').childNodes) {
-			if (!isNaN(i) && document.getElementById('editorTree').childNodes[i]) {
-				newOrder[document.getElementById('editorTree').childNodes[i].id] = currentStageOrder[nPos];
-				++nPos;
-			}
-		}*/
-		/*numDays = Math.max(Math.min(document.getElementById('numdays').innerHTML, 7), 1);
-		for (d = 0; d < numDays; d++) {
-			for (i in editorTree) {
-				if (isNaN(i) || editorTree[i] == null) { continue; }
-				for (a = 0; a < plannerOld.length; a++) {
-					if (plannerOld[a] && plannerOld[a].id != null && plannerOld[a].day == d && plannerOld[a].stage == i) {
-						planner[a].stage = newOrder[i];
-					}
-				}
-			}
-		}
-		for (i in editorTree) {
-			if (isNaN(i) || editorTree[i] == null) { continue; }
-			editorTree[newOrder[i]] = editorTreeOld[i];
-			stageCols[newOrder[i]] = stageColsOld[i];
-		}*//*
 
-		buildEditorTree();
-		blockEffectMove = false;
-	}*/
+	if (reorderEffect != null) {
+		reorderEffect.style.opacity = '';
+		reorderEffect = null;
+		reorderInitialY = 0;
+		if (tmpEffect) {
+			tmpEffect.parentNode.removeChild(tmpEffect);
+			tmpEffect = null;
+			document.getElementById('ghostTree').style.display = "";
+			dummyEffect.parentNode.removeChild(dummyEffect);
+			dummyEffect = null;
+		}
+	}
+
 	document.body.style.cursor = '';
 }
 
@@ -551,7 +512,8 @@ function newEditorWindow() {
 	var editorMarkup = '<div class="winnav"><input type="button" value="Preset" id="navPreset" /><input type="button" value="Edit" id="navEdit" /><input type="button" value="Settings" id="navSettings" /><div class="winnavSpacer"></div><input type="button" value="Help" id="navHelp" /></div>' +
 				'<div id="treeEffectHost"><div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" />' +
 				'<input type="button" value=" + " onclick="showMenu(event, 2);" />' +
-				'<input type="button" value="x2" onclick="duplicatedSelected()" /></div><div id="editorTree"><div id="treeSelectedBG"></div><ul></ul></div></div>' +
+				'<input type="button" value="x2" onclick="duplicatedSelected()" /></div>' +
+				'<div id="editorTree"><div id="treeSelectedBG"></div><ul></ul></div></div>' +
 				'<div id="treeEffectGrip" class="resizeGrip"></div>' +
 				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
 				'</div><div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
@@ -730,7 +692,7 @@ function displayEffectView(e) {
 			tmpTop += tmpEl.offsetTop;
 			tmpEl = tmpEl.offsetParent;
 		}
-		var adjustedLayerY = e.layerY - tmpTop - 18;
+		var adjustedLayerY = e.layerY - tmpTop - 20;
 
 		if (adjustedLayerY > 0) {
 			tmpEl = e.target.childNodes[2]; //Start at the 3rd child - avoids the collapse span + "Effect list" text
@@ -738,7 +700,7 @@ function displayEffectView(e) {
 				if (adjustedLayerY - tmpEl.childNodes[i].offsetHeight < 1) {
 					if (tmpEl.childNodes[i].childNodes && adjustedLayerY > 20) {
 						//be recursive - Yes this is a crappy way of achieving it.
-						adjustedLayerY -= 18; //We're using 18 because the height should be 20, but there is 2 padding - Yes.
+						adjustedLayerY -= 20;
 						tmpEl = tmpEl.childNodes[i].childNodes[2];
 						i = -1;
 						continue;
