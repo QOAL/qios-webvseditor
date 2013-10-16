@@ -353,6 +353,7 @@ function mouseup(e) {
 					oldNode = oldNode.components[oldTreePos[i]];
 				}
 			}
+			oldNode.killMe = true; //Mark the node so we can find it if we need to.
 
 			//Find the node where we're moving before.
 			for (var g = 0; g < dummyEffect.parentNode.childNodes.length; g++) {
@@ -375,14 +376,26 @@ function mouseup(e) {
 			} else {
 				node.push(oldNode);
 			}
-			//remove the old node
-			oldParent.splice(oldTreePos[oldTreePos.length - 1], 1);
+
+			//remove the old node - Yes we need to find it again as it could have moved.
+			if (oldParent[oldTreePos[oldTreePos.length - 1]] == oldNode) {
+				oldParent.splice(oldTreePos[oldTreePos.length - 1], 1);
+			} else {
+				for (var i = 0; i < oldParent.length; i++) {
+					if (oldParent[i].killMe && i != g) {
+						oldParent.splice(i, 1);
+						break;
+					}
+				}
+			}
+			delete oldNode.killMe;
 
 			dummyEffect.parentNode.removeChild(dummyEffect);
 			dummyEffect = null;
 
 			buildEditorTree();
 
+			//This needs fixing as it can land on the wrong node.
 			var evt = document.createEvent("MouseEvents");
 			evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 			document.getElementById('ET-' + treePos.join('-')).dispatchEvent(evt);
