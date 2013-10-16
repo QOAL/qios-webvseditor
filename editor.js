@@ -8,8 +8,7 @@ var months = ["January","February","March","April","May","June","July","August",
 
 var area, gMenu;
 var selectedEffect = null;
-var reorderEffect = null, tmpEffect = null, dummyEffect = null, blockEffectMove = false, currentEffectOrder = [];
-var reorderInitialY = 0;
+var reorderEffect = null, dummyEffect = null, reorderInitialY = 0;
 
 var resizeGripper = null;
 
@@ -232,20 +231,7 @@ function mousemove(e) {
 	}
 
 	if (reorderEffect) {
-		//Get the effect tree's absolute y position
-		var tmpTop = document.getElementById('editorTree').offsetTop;
-		var tmpLeft = document.getElementById('editorTree').offsetLeft + document.getElementById('editorTree').offsetWidth;
-		var tmpEl = document.getElementById('editorTree').offsetParent;
-		while (tmpEl != null) {
-			tmpTop += tmpEl.offsetTop;
-			tmpLeft += tmpEl.offsetLeft;
-			tmpEl = tmpEl.offsetParent;
-		}
-
-		if (!tmpEffect && Math.abs(reorderInitialY - mousePos[1]) > 10) {
-			tmpEffect = reorderEffect.cloneNode(true);
-			document.getElementById('ghostTree').style.display = "block";
-			document.getElementById('ghostTree').childNodes[0].insertBefore(tmpEffect, null);
+		if (!dummyEffect && Math.abs(reorderInitialY - mousePos[1]) > 4) {
 			//We'd like a hand cursor
 			document.body.style.cursor = "n-resize";
 			reorderEffect.style.opacity = .375;
@@ -254,37 +240,51 @@ function mousemove(e) {
 			dummyEffect.className = 'dummyEffect';
 			dummyEffect.textContent = '<Move Here>';
 			reorderEffect.parentNode.insertBefore(dummyEffect, reorderEffect);
+
+			//We hide the selected effect BG here, as it'll probably be in the wrong place for duration of the D&D
+			document.getElementById('editorTree').childNodes[0].style.display = "";
 		}
 
-		/*document.getElementById('ghostTree').style.top = Math.max(10, Math.min(
-				document.getElementById('editorTree').childNodes[1].lastChild.offsetTop + 20,
-				(mousePos[1] - tmpTop + document.getElementById('editorTree').scrollTop - 10)
-			)) + "px";*/
+		if (dummyEffect) {
+			//Get the effect tree's absolute y position
+			var tmpTop = document.getElementById('editorTree').offsetTop;
+			var tmpEl = document.getElementById('editorTree').offsetParent;
+			while (tmpEl != null) {
+				tmpTop += tmpEl.offsetTop;
+				tmpEl = tmpEl.offsetParent;
+			}
 
-		document.getElementById('ghostTree').style.top = Math.max(tmpTop + Math.max(0, 20 - document.getElementById('editorTree').scrollTop), mousePos[1] - 10) + "px";
-		document.getElementById('ghostTree').style.left = tmpLeft + "px";
-
-		var adjustedLayerY =  Math.max(20, Math.min(document.getElementById('editorTree').childNodes[1].lastChild.offsetTop + 20,
-				(mousePos[1] - tmpTop + document.getElementById('editorTree').scrollTop - 10))) + 10;
-		var tmpEl = document.getElementById('editorTree').childNodes[1]; //Start at the 3rd child - avoids the collapse span + "Effect list" text
-		for (var i = 0; i < tmpEl.childNodes.length; i++) {
-			if (adjustedLayerY - tmpEl.childNodes[i].offsetHeight < 1) {
-				if (tmpEl.childNodes[i].childNodes && adjustedLayerY > 20 && tmpEl.childNodes[i] != reorderEffect) {
-					//be recursive - Yes this is a crappy way of achieving it.
-					console.log(tmpEl.childNodes[i].childNodes[2].offsetTop);
-					adjustedLayerY -= 20;
-					tmpEl = tmpEl.childNodes[i].childNodes[2];
-					i = -1;
-					continue;
+			var adjustedLayerY =  Math.max(20, Math.min(document.getElementById('editorTree').childNodes[1].lastChild.offsetTop + 20,
+					(mousePos[1] - tmpTop + document.getElementById('editorTree').scrollTop - 10))) + 10;
+			var tmpEl = document.getElementById('editorTree').childNodes[1]; //Start at the 3rd child - avoids the collapse span + "Effect list" text
+			for (var i = 0; i < tmpEl.childNodes.length; i++) {
+				if (adjustedLayerY - tmpEl.childNodes[i].offsetHeight < 1) {
+					if (tmpEl.childNodes[i].childNodes && adjustedLayerY > 20 && tmpEl.childNodes[i] != reorderEffect) {
+						//be recursive - Yes this is a crappy way of achieving it.
+						adjustedLayerY -= 20;
+						tmpEl = tmpEl.childNodes[i].childNodes[2];
+						i = -1;
+						continue;
+					} else {
+						//Move the dummy node to correct location in the tree
+						if (adjustedLayerY > 10) { //If they're over half way over an element, then try and insert after it
+							//First deal with being over the effect list element
+							if (tmpEl.childNodes[i].getAttribute('class') && tmpEl.childNodes[i].getAttribute('class').indexOf('effectTree') != -1 && tmpEl.childNodes[i] != reorderEffect) {
+								tmpEl.childNodes[i].childNodes[2].insertBefore(dummyEffect, tmpEl.childNodes[i].childNodes[2].firstChild);
+							} else if (tmpEl.childNodes[i].nextSibling) { //Now try and insert it after the current element
+								tmpEl.childNodes[i].parentNode.insertBefore(dummyEffect, tmpEl.childNodes[i].nextSibling);
+							} else { //Otherwise insert it at the end of the current parent
+								tmpEl.childNodes[i].parentNode.appendChild(dummyEffect);
+							}
+						} else { //And this just insert the dummy before the node being hovered over
+							tmpEl.childNodes[i].parentNode.insertBefore(dummyEffect, tmpEl.childNodes[i]);
+						}
+						return; //Uhh we should probably move this code to separate function if we're going to do that.
+					}
+					break;
 				} else {
-					//So a mixture of both of these should be what we need.
-					//tmpEl.childNodes[i].parentNode.insertBefore(dummyEffect, tmpEl.childNodes[i].nextSibling);
-					tmpEl.childNodes[i].parentNode.insertBefore(dummyEffect, tmpEl.childNodes[i]);
-					return;
+					adjustedLayerY -= tmpEl.childNodes[i].offsetHeight;
 				}
-				break;
-			} else {
-				adjustedLayerY -= tmpEl.childNodes[i].offsetHeight;
 			}
 		}
 	}
@@ -342,16 +342,54 @@ function mouseup(e) {
 	}
 
 	if (reorderEffect != null) {
+		if (dummyEffect) {
+			//Get the node that we're moving
+			var oldTreePos = reorderEffect.id.substr(3).split('-');
+			var oldNode = preset.components[oldTreePos[0]];
+			var oldParent = preset.components;
+			if (oldTreePos.length > 1) {
+				for (var i = 1; i < oldTreePos.length; i++) {
+					oldParent = oldNode.components;
+					oldNode = oldNode.components[oldTreePos[i]];
+				}
+			}
+
+			//Find the node where we're moving before.
+			for (var g = 0; g < dummyEffect.parentNode.childNodes.length; g++) {
+				if (dummyEffect == dummyEffect.parentNode.childNodes[g]) { break; }
+			}
+			treePos = dummyEffect.parentNode.parentNode.id.substr(3).split('-');
+			if (treePos == 'torTree') { treePos = []; g--; } //If it's a root element then correct for that.
+			treePos.push(g);
+			var node = preset;
+			if (treePos.length > 1) {
+				node = preset.components[treePos[0]];
+				for (var i = 1; i < treePos.length - 1; i++) {
+					node = node.components[treePos[i]];
+				}
+			}
+			node = node.components;
+			//insert a copy of the old node into the correct place
+			if (node[g]) {
+				node.splice(g, 0, oldNode);
+			} else {
+				node.push(oldNode);
+			}
+			//remove the old node
+			oldParent.splice(oldTreePos[oldTreePos.length - 1], 1);
+
+			dummyEffect.parentNode.removeChild(dummyEffect);
+			dummyEffect = null;
+
+			buildEditorTree();
+
+			var evt = document.createEvent("MouseEvents");
+			evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+			document.getElementById('ET-' + treePos.join('-')).dispatchEvent(evt);
+		}
 		reorderEffect.style.opacity = '';
 		reorderEffect = null;
 		reorderInitialY = 0;
-		if (tmpEffect) {
-			tmpEffect.parentNode.removeChild(tmpEffect);
-			tmpEffect = null;
-			document.getElementById('ghostTree').style.display = "";
-			dummyEffect.parentNode.removeChild(dummyEffect);
-			dummyEffect = null;
-		}
 	}
 
 	document.body.style.cursor = '';
