@@ -8,7 +8,7 @@ var months = ["January","February","March","April","May","June","July","August",
 
 var area, gMenu;
 var selectedEffect = null;
-var reorderEffect = null, dummyEffect = null, reorderInitialY = 0;
+var reorderEffect = null, dummyEffect = null, paddingElement = null, reorderInitialY = 0;
 
 var resizeGripper = null;
 
@@ -243,6 +243,12 @@ function mousemove(e) {
 
 			//We hide the selected effect BG here, as it'll probably be in the wrong place for duration of the D&D
 			document.getElementById('editorTree').childNodes[0].style.display = "";
+
+			//Having this element fixes a bug where when an effect list is the last item in the tree,
+			// you'll be unable to drag an effect to the end of the tree, or past the 1st effect in that list.
+			//If you can find a better fix then please patch me out. :)
+			paddingElement = document.createElement('li');
+			document.getElementById('editorTree').childNodes[1].appendChild(paddingElement);
 		}
 
 		if (dummyEffect) {
@@ -256,17 +262,18 @@ function mousemove(e) {
 
 			var adjustedLayerY =  Math.max(20, Math.min(document.getElementById('editorTree').childNodes[1].lastChild.offsetTop + 20,
 					(mousePos[1] - tmpTop + document.getElementById('editorTree').scrollTop - 10))) + 10;
-			var tmpEl = document.getElementById('editorTree').childNodes[1]; //Start at the 3rd child - avoids the collapse span + "Effect list" text
+			var tmpEl = document.getElementById('editorTree').childNodes[1];
 			for (var i = 0; i < tmpEl.childNodes.length; i++) {
 				if (adjustedLayerY - tmpEl.childNodes[i].offsetHeight < 1) {
 					if (tmpEl.childNodes[i].childNodes && adjustedLayerY > 20 && tmpEl.childNodes[i] != reorderEffect) {
 						//be recursive - Yes this is a crappy way of achieving it.
 						adjustedLayerY -= 20;
-						tmpEl = tmpEl.childNodes[i].childNodes[2];
+						tmpEl = tmpEl.childNodes[i].childNodes[2]; //Start at the 3rd child - avoids the collapse span + "Effect list" text
 						i = -1;
 						continue;
 					} else {
 						//Move the dummy node to correct location in the tree
+						//console.log(adjustedLayerY);
 						if (adjustedLayerY > 10) { //If they're over half way over an element, then try and insert after it
 							//First deal with being over the effect list element
 							if (tmpEl.childNodes[i].getAttribute('class') && tmpEl.childNodes[i].getAttribute('class').indexOf('effectTree') != -1 && tmpEl.childNodes[i] != reorderEffect) {
@@ -392,13 +399,18 @@ function mouseup(e) {
 
 			dummyEffect.parentNode.removeChild(dummyEffect);
 			dummyEffect = null;
+			paddingElement.parentNode.removeChild(paddingElement);
+			paddingElement = null;
 
 			buildEditorTree();
 
 			//This needs fixing as it can land on the wrong node.
-			var evt = document.createEvent("MouseEvents");
-			evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-			document.getElementById('ET-' + treePos.join('-')).dispatchEvent(evt);
+			//Probably need to walk the tree to find it, before the marker is removed?
+			if (document.getElementById('ET-' + treePos.join('-'))) {
+				var evt = document.createEvent("MouseEvents");
+				evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+				document.getElementById('ET-' + treePos.join('-')).dispatchEvent(evt);
+			}
 		}
 		reorderEffect.style.opacity = '';
 		reorderEffect = null;
