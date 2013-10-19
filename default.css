@@ -495,6 +495,8 @@ div.pbm {
 	background-image: radial-gradient(6px at center, #303030 20%, rgba(48,48,48,0) 35%, rgba(72,72,72,0) 55%, #a8a8a8 55%, #a8a8a8 65%, rgba(72,72,72,0) 80%);
 }
 
+#editorTree .effectTree span.collapsed + ul { display: none; }
+
 #editorTree > ul ul:before {
 	position: absolute;
 	top: -5px;

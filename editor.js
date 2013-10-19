@@ -249,6 +249,7 @@ function mousemove(e) {
 			//If you can find a better fix then please patch me out. :)
 			paddingElement = document.createElement('li');
 			paddingElement.style.padding = '0px';
+			paddingElement.style.height = '1px';
 			document.getElementById('editorTree').childNodes[1].appendChild(paddingElement);
 		}
 
@@ -730,7 +731,7 @@ function recursiveTreePopulate(branch, parent, id) {
 			treeName = effectInfo.unknown.name + ' (' + branch[i].type + ')';
 		}
 		if (branch[i].type == 'EffectList') {
-			newEffect.innerHTML = '<span onclick="toggleCollapseList(event)"></span>' + lameHTMLSpecialChars(treeName);
+			newEffect.innerHTML = '<span ' + (branch[i].collapsed ? 'class="collapsed" ' : '') + 'onclick="toggleCollapseList(event)"></span>' + lameHTMLSpecialChars(treeName);
 		} else {
 			newEffect.innerHTML = lameHTMLSpecialChars(treeName);
 		}
@@ -855,9 +856,22 @@ function moveSelectedBG() {
 
 function toggleCollapseList(e) {
 	if (!e.target || !e.target.parentNode || !e.target.parentNode.childNodes[2]) { return; }
-	var tmpList = e.target.parentNode.childNodes[2];
-	tmpList.style.display = tmpList.style.display == 'none' ? '' : 'none';
-	e.target.setAttribute('class', tmpList.style.display == 'none' ? 'collapsed' : '');
+
+	//Find & mark the effect list in the preset with the collapsed status
+	var treePos = e.target.parentNode.id.substr(3).split('-');
+	var node = preset.components[treePos[0]];
+	if (treePos.length > 1) {
+		for (var i = 1; i < treePos.length; i++) {
+			node = node.components[treePos[i]];
+		}
+	}
+
+	if (node.collapsed) {
+		delete node.collapsed;
+	} else {
+		node.collapsed = true;
+	}
+	e.target.setAttribute('class', node.collapsed ? 'collapsed' : '');
 }
 
 function buildPaneElement(typeInfo, data, name, parent) {
