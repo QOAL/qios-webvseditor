@@ -248,6 +248,7 @@ function mousemove(e) {
 			// you'll be unable to drag an effect to the end of the tree, or past the 1st effect in that list.
 			//If you can find a better fix then please patch me out. :)
 			paddingElement = document.createElement('li');
+			paddingElement.style.padding = '0px';
 			document.getElementById('editorTree').childNodes[1].appendChild(paddingElement);
 		}
 
@@ -273,7 +274,6 @@ function mousemove(e) {
 						continue;
 					} else {
 						//Move the dummy node to correct location in the tree
-						//console.log(adjustedLayerY);
 						if (adjustedLayerY > 10) { //If they're over half way over an element, then try and insert after it
 							//First deal with being over the effect list element
 							if (tmpEl.childNodes[i].getAttribute('class') && tmpEl.childNodes[i].getAttribute('class').indexOf('effectTree') != -1 && tmpEl.childNodes[i] != reorderEffect) {
@@ -395,6 +395,15 @@ function mouseup(e) {
 					}
 				}
 			}
+
+			//Find the correct position for our moved node
+			for (var k = 0; k < node.length; k++) {
+				if (node[k].killMe || (node[k].components && node[k].components.killMe)) {
+					treePos[treePos.length - 1] = k;
+					break;
+				}
+			}
+
 			delete oldNode.killMe;
 
 			dummyEffect.parentNode.removeChild(dummyEffect);
@@ -404,8 +413,7 @@ function mouseup(e) {
 
 			buildEditorTree();
 
-			//This needs fixing as it can land on the wrong node.
-			//Probably need to walk the tree to find it, before the marker is removed?
+			//Select the newly moved effect
 			if (document.getElementById('ET-' + treePos.join('-'))) {
 				var evt = document.createEvent("MouseEvents");
 				evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
