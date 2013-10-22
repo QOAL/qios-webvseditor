@@ -6,6 +6,10 @@ var mdwi = -1;
 var wrid = -1; //Window resize ID
 var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
+var haveWebVS = 0;
+var webVSActive = false;
+var dancer, webvs;
+
 var area, gMenu;
 var selectedEffect = null;
 var reorderEffect = null, dummyEffect = null, paddingElement = null, reorderInitialY = 0;
@@ -36,8 +40,6 @@ var globalMenus = [
 	Oh yeah, this editor should have language support I guess
 
 	It would be cool to have a little icon for each element type.
-
-	Need to add a resize handle to the gap between the editor tree and the effect pane
 */
 
 //Enumerate some stuff
@@ -564,8 +566,6 @@ function newWindow(info) {
 		eventHook(document.getElementById("wr" + wID), "mousedown", startWindowResize);
 	}
 	
-	if (info.init) { windows[wID].init = info.init; windows[wID].init(); }
-
 	if (info.close) { windows[wID].close = info.close; }
 
 	newItem = document.createElement('div');
@@ -575,6 +575,8 @@ function newWindow(info) {
 	eventHook(newItem, 'click', showthis);
 	newItem.innerHTML = '<div class="titlebarIcon" style="background-image: url(' + windows[wID].icon + ')"></div>' + windows[wID].caption;
 	document.getElementById("appholder").appendChild(newItem);
+
+	if (info.init) { windows[wID].init = info.init; windows[wID].init(); }
 
 	return wID; //might be useful
 }
@@ -603,6 +605,46 @@ function newEditorWindow() {
 			eventHook(menuBar[i], "mouseover", showEditorNavMenu);
 		}
 	}
+}
+
+function newWebVSWindow() {
+	if (!haveWebVS) { return; }
+	newWindow({"caption": "WebVS", "icon": "icon.png", "width": 640, "height": 480, "form": '<canvas style="background-color:#000;" width="640" height="480" id="webvsCanvas"></canvas>', "init": startWebVS, "close": stopWebVS});
+}
+
+function startWebVS() {
+	if (!haveWebVS) { return; }
+
+	dancer = new Dancer();
+	webvs = new Webvs.Main({
+		canvas: document.getElementById("webvsCanvas"),
+		analyser: new Webvs.DancerAdapter(dancer),
+		showStat: false
+	});
+
+	webvs.loadPreset(preset);
+	webvs.start();
+
+	dancer.load({
+		src: 'silence.ogg'
+	});
+	dancer.play();
+
+	webVSActive = true;
+}
+function stopWebVS() {
+	if (!haveWebVS) { return; }
+
+	webvs.stop();
+	dancer.stop();
+
+	webVSActive = false;
+}
+function updateWebVSPreset() {
+	if (!haveWebVS || !webVSActive) { return; }
+
+	webvs.loadPreset(preset);
+	webvs.start();
 }
 
 function showMenu(e, markup, left, top, right, bottom) {
@@ -894,7 +936,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			break;
 		case control_radio:
 			for (var o in typeInfo.options) {
-				output += '<label>' + typeInfo.options[o] + '<input type="radio" id="' + thisID + '"' + (o == data ? ' checked' : '') + ' value="' + o + '" onchange="updatePreset(event)" /></label> ';
+				output += '<label>' + typeInfo.options[o] + '<input type="radio" name="' + thisID + '" id="' + thisID + '"' + (o == data ? ' checked' : '') + ' value="' + o + '" onchange="updatePreset(event)" /></label> ';
 			}
 			break;
 		case control_check:
@@ -1013,7 +1055,7 @@ function duplicatedSelected() {
 	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 	document.getElementById('ET-' + treePos.join('-')).dispatchEvent(evt);
 
-	//This is where webvs would be given the updated preset
+	updateWebVSPreset();
 }
 
 function removeSelected() {
@@ -1047,7 +1089,7 @@ function removeSelected() {
 	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 	newSel.dispatchEvent(evt);
 
-	//This is where webvs would be given the updated preset
+	updateWebVSPreset();
 }
 
 function updatePreset(e) {
@@ -1094,7 +1136,7 @@ function updatePreset(e) {
 		}
 	}
 
-	//This is where webvs would be given the updated preset
+	updateWebVSPreset();
 }
 
 function addThisEffect(e) {
@@ -1137,7 +1179,7 @@ function addThisEffect(e) {
 	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 	document.getElementById('ET-' + treePos.join('-')).dispatchEvent(evt);
 
-	//This is where webvs would be given the updated preset
+	updateWebVSPreset();
 }
 
 function buildEffectMenu() {
@@ -1184,6 +1226,8 @@ function fetchPreset() {
 	xhrFetch.onload = function() {
 		if (this.status == 200) {
 			preset = JSON.parse(this.responseText);
+
+			updateWebVSPreset();
 		} else {
 			//Error!
 			//this.status + '<br />' + this.responseText;
@@ -1216,6 +1260,10 @@ function init() {
 	fetchPreset();
 
 	newEditorWindow();
+
+	haveWebVS = typeof Dancer != 'undefined' && typeof Webvs != 'undefined' ? true : false;
+	haveWebVS = false;
+	if (haveWebVS) { newWebVSWindow(); }
 
 	//We need some way of registering windows onload, that'll let us add them to menus and stuff if they want to be placed on one.
 }
