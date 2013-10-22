@@ -16,6 +16,8 @@ var reorderEffect = null, dummyEffect = null, paddingElement = null, reorderInit
 
 var resizeGripper = null;
 
+var reader = new FileReader();
+
 var poppedOut = [];
 
 var editorMenuActive = false;
@@ -126,7 +128,7 @@ var effectInfo = {
 	}
 };
 
-var preset = {}; //{"clearFrame": false,"components": []}
+var preset = {"clearFrame": false,"components": []};
 
 
 //From http://www.somacon.com/p355.php
@@ -398,7 +400,7 @@ function mouseup(e) {
 					}
 				}
 			}
-
+	
 			//Find the correct position for our moved node
 			for (var k = 0; k < node.length; k++) {
 				if (node[k].killMe || (node[k].components && node[k].components.killMe)) {
@@ -447,6 +449,27 @@ function dndCancel(e) {
 function dropHandler(event) {
 	event.stopPropagation();
 	event.preventDefault();
+
+
+	//We'll just deal with a single preset for now
+	// In the future avs/webvs presets can be shoved in to an array or put in to local storage
+	var dropFile = event.dataTransfer.files[0];
+
+	//dropFile.name.toLowerCase().substr(-4) == '.avs'
+	if (dropFile.name.toLowerCase().substr(-6) != '.webvs') { return; }
+
+	reader.onload = (function() {
+		return function(e) {
+			var newPreset = JSON.parse(e.target.result);
+			//The simple confirm dialog here should be replaced in the future
+			if (newPreset && newPreset.components) { // && window.confirm("Overwrite the current preset?")
+				preset = newPreset;
+				buildEditorTree();
+				updateWebVSPreset();
+			}
+		};
+	})();
+	reader.readAsText(dropFile);
 }
 
 function sortWindowsZIndex(topid) {
@@ -1226,6 +1249,9 @@ function fetchPreset() {
 	xhrFetch.onload = function() {
 		if (this.status == 200) {
 			preset = JSON.parse(this.responseText);
+
+			//need a check here to confirm if the editor exists, if it does then:
+			//buildEditorTree();
 
 			updateWebVSPreset();
 		} else {
