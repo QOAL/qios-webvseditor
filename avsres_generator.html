@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>WebVS Editor</title>
+	<meta charset="UTF-8">
+	<script type="text/javascript">
+		var output = [];
+
+		function dndCancel(e) {
+			e.stopPropagation();
+			e.preventDefault();
+			return false;
+		}
+
+		function dropHandler(event) {
+			event.stopPropagation();
+			event.preventDefault();
+
+			var readers = [];
+			for (var i = 0; i < event.dataTransfer.files.length; i++) {
+				var dropFile = event.dataTransfer.files[i];
+				var rid = readers.push(new FileReader()) - 1;
+
+				readers[rid].fileName = dropFile.name;
+				readers[rid].onload = (function() {
+					return function(e) {
+						output.push('"' + e.target.fileName + '": "' + e.target.result + '"');
+						document.getElementById("output").textContent = '{' + output.join(',\n') + '}';
+					};
+				})();
+				readers[rid].readAsDataURL(dropFile);
+			}
+		}
+
+		function reset() {
+			output = [];
+			document.getElementById("output").textContent = '';
+		}
+
+		function init() {
+			document.addEventListener("drop", dropHandler, false);
+			document.addEventListener("dragover", dndCancel, false);
+			document.addEventListener("dragenter", dndCancel, false);
+		}
+
+		window.addEventListener("load", init, false);
+	</script>
+</head>
+<body>
+	<textarea id="output" col="50" rows="50" style="width:100%;height:100%;"></textarea><br />
+	<button onclick="reset()">Reset</button>
+</body>
+</html>
