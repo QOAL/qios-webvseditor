@@ -10,6 +10,10 @@ var haveWebVS = 0;
 var webVSActive = false;
 var dancer, webvs;
 
+var haveWindow = {};
+
+var selectedHelpTab = 'General';
+
 var area, gMenu;
 var selectedEffect = null;
 var reorderEffect = null, dummyEffect = null, paddingElement = null, reorderInitialY = 0;
@@ -30,7 +34,7 @@ var globalMenus = [
 	'<ul><li>Load...</li><li>Save...</li><li class="menuspacer"></li><li>New</li></ul>',
 	'<ul><li>Undo</li><li>Redo</li></ul>',
 	'<ul><li>Display</li><li>Fullscreen</li><li>Presets/Hotkeys</li><li>Beat Detection</li><li>Transistions</li><li class="menuspacer"></li><li>Debug Window...</li></ul>',
-	'<ul><li>Expression help</li><li class="menuspacer"></li><li>About...</li></ul>'
+	'<ul><li onclick="newExpressionHelpWindow()">Expression help...</li><li class="menuspacer"></li><li>About...</li></ul>'
 ];
 
 /*
@@ -44,91 +48,7 @@ var globalMenus = [
 	It would be cool to have a little icon for each element type.
 */
 
-//Enumerate some stuff
-var label = "label";
-var control = "control";
-var control_null = 0x0;
-var control_code = 0x1;
-var control_text = 0x2;
-var control_number = 0x3;
-var control_radio = 0x4;
-var control_check = 0x5;
-var control_colour = 0x6;
-var control_colour_bar = 0x7;
-var control_button = 0x8;
-var control_dropdown = 0x9;
-var control_slider = 0xA;
-var control_label = 0xB;
-
-var effectInfo = {
-	"unknown": {
-		"name": "Unknown",
-		"type": ""
-	},
-	"Main": {
-		"name": "Main",
-		"type": "",
-		"pane": {
-			"clearFrame": { label: "Clear every frame:", control: control_check, "default": false },
-			"name": { label: "Preset name:", control: control_text },
-			"author": { label: "Author:", control: control_text }
-		}
-	},
-	"Comment": {
-		"name": "Comment",
-		"type": "Misc"
-		/* We currently need to handle this specially */
-	},
-	"EffectList": {
-		"name": "Effect List",
-		"type": "",
-		"pane": {
-			"enabled": { label: "Enabled:", control: control_check, "default": true },
-		}
-	},
-	"SuperScope": {
-		"name": "SuperScope",
-		"type": "Render",
-		"pane": {
-			"code": {
-				"init": { label: "Init", control: control_code, "height": 30 },
-				"perFrame": { label: "Per Frame", control: control_code, "height": 60 },
-				"onBeat": { label: "On Beat", control: control_code },
-				"perPoint": { label: "Per Point", control: control_code, "height": 80 }
-			},
-			"source": { label: "Source data:", control: control_radio, "options": ["Waveform", "Spectrum"], "default": 0 },
-			"audioChannel": { label: "Channel:", control: control_radio, "options": ["Left", "Centre", "Right"], "default": 1 },
-			"lineType": { label: "Draw as:", control: control_radio, "options": ["Dots", "Lines"], "default": 1},
-			"colour": {
-				"count": { label: "Cycle through", control: control_number, "min": 1, "max": 16, "default": 1 },
-				"list": { label: "Colours (Max 16)", control: control_colour_bar}
-			}
-		}
-	},
-	"DynamicMovement": {
-		"name": "Dynamic Movement",
-		"type": "Trans",
-		"pane": {
-			"code": {
-				"init": { label: "Init", control: control_code, "height": 30 },
-				"perFrame": { label: "Per Frame", control: control_code, "height": 60 },
-				"onBeat": { label: "On Beat", control: control_code },
-				"perPoint": { label: "Per Pixel", control: control_code, "height": 80 }
-			},
-			"coordinates": { label: "Rectangular coordinates:", control: control_check, "default": false }
-		}
-	},
-	"Blur": {
-		"name": "Blur",
-		"type": "Trans",
-		"pane": {
-			"blur": { label: "Strength:", control: control_radio, "options": ["None", "Light", "Medium", "Heavy"], "default": 2 },
-			"rounding": { label: "Rounding:", control: control_radio, "options": ["Down", "Up"], "default": 0 }
-		}
-	}
-};
-
-var preset = {"clearFrame": false,"components": []};
+var preset = {"clearFrame": false, "components": []};
 
 
 //From http://www.somacon.com/p355.php
@@ -605,6 +525,7 @@ function newWindow(info) {
 }
 
 function newEditorWindow() {
+	if (haveWindow.editor) { return; } //Probably should move the actual window into focus.
 	//Need to make sure there is only one of these at a time!
 	var editorMarkup = '<div class="winnav"><input type="button" value="Preset" id="navPreset" /><input type="button" value="Edit" id="navEdit" /><input type="button" value="Settings" id="navSettings" /><div class="winnavSpacer"></div><input type="button" value="Help" id="navHelp" /></div>' +
 				'<div id="treeEffectHost"><div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" />' +
@@ -614,7 +535,7 @@ function newEditorWindow() {
 				'<div id="treeEffectGrip" class="resizeGrip"></div>' +
 				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
 				'</div><div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
-	var wID = newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree});
+	var wID = newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree, "close": function(){haveWindow.editor=false}});
 
 	buildEffectMenu();
 
@@ -628,11 +549,45 @@ function newEditorWindow() {
 			eventHook(menuBar[i], "mouseover", showEditorNavMenu);
 		}
 	}
+
+	haveWindow.editor = true;
 }
 
 function newWebVSWindow() {
-	if (!haveWebVS) { return; }
+	if (!haveWebVS || haveWindow.webvs) { return; }
 	newWindow({"caption": "WebVS", "icon": "icon.png", "width": 640, "height": 480, "form": '<canvas style="background-color:#000;" width="640" height="480" id="webvsCanvas"></canvas>', "init": startWebVS, "close": stopWebVS});
+	haveWindow.webvs = true;
+}
+
+function newExpressionHelpWindow(effect) {
+	if (haveWindow.expression) { return; }
+
+	//Work out which tab we're on
+	if (effect && effectInfo[effect] && effectInfo[effect].help) { selectedHelpTab = effect; }
+	if (!expressionHelp[selectedHelpTab] && selectedHelpTab != effect) { selectedHelpTab = 'General'; }
+
+	//Build the form
+	var markUp = '<div style="padding:10px"><div class="tabContainer">';
+	for (var i in expressionHelp) {
+		markUp += '<div id="tab' + i + '" class="tab' + (selectedHelpTab == i ? ' activeTab' : '') + '" onclick="changeHelpTab(\'' + i + '\')">' + i + '</div>';
+	}
+	if (effect && effectInfo[effect] && effectInfo[effect].help) {
+		markUp += '<div id="tab' + effect + '" class="tab' + (selectedHelpTab == effect ? ' activeTab' : '') + '" onclick="changeHelpTab(\'' + effect + '\')">' + effectInfo[effect].name + '</div>';
+	}
+
+	markUp += '</div><textarea readonly id="expressionTextarea">';
+
+	if (expressionHelp[selectedHelpTab]) {
+		markUp += lameHTMLSpecialChars(expressionHelp[selectedHelpTab]);
+	} else {
+		markUp += lameHTMLSpecialChars(effectInfo[effect].help);
+	}
+
+	markUp += '</textarea><input type="button" style="margin-left:0;" onclick="closeWindow(event, event.target.parentNode.parentNode.id.substr(1))" value="Close" /></div>';
+
+	newWindow({"caption": "WebVS Expression Help", "icon": "icon.png", "width": 467, "height": 375, "form": markUp, "close": function(){haveWindow.expression=false}});
+
+	haveWindow.expression = true;
 }
 
 function startWebVS() {
@@ -662,12 +617,30 @@ function stopWebVS() {
 	dancer.stop();
 
 	webVSActive = false;
+
+	haveWindow.webvs = false;
 }
 function updateWebVSPreset() {
 	if (!haveWebVS || !webVSActive) { return; }
 
 	webvs.loadPreset(preset);
 	webvs.start();
+}
+
+function changeHelpTab(page) {
+	document.getElementById('tab' + selectedHelpTab).setAttribute('class', 'tab');
+	if (!expressionHelp[page] && (!effectInfo[page] || !effectInfo[page].help)) {
+		selectedHelpTab = 'General';
+	} else {
+		selectedHelpTab = page;
+	}
+	document.getElementById('tab' + selectedHelpTab).setAttribute('class', 'tab activeTab');
+	if (expressionHelp[selectedHelpTab]) {
+		document.getElementById('expressionTextarea').value = expressionHelp[selectedHelpTab];
+	} else {
+		document.getElementById('expressionTextarea').value = effectInfo[selectedHelpTab].help;
+	}
+	document.getElementById('expressionTextarea').scrollTop = 0;
 }
 
 function showMenu(e, markup, left, top, right, bottom) {
@@ -894,7 +867,7 @@ function displayEffectView(e) {
 			thisEffectHTML = JSON.stringify(node);
 		} else if (thisEffect.name == 'Comment') { //specialise the comment pane
 			var theComment = node.text ? node.text : '';
-			thisEffectHTML = '<textarea id="text" style="width:100%;resize:none;font-family:arial;font-size:11px;height:calc(100% - 6px);margin:0;" onchange="updatePreset(event)">' + theComment + '</textarea>';
+			thisEffectHTML = '<textarea id="text" class="commentTextarea" onchange="updatePreset(event)">' + theComment + '</textarea>';
 		} else {
 			for (var i in thisEffect.pane) {
 				for (var k in thisEffect.pane[i]) { //Try an iterate through this pane element
@@ -966,11 +939,14 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			output += '<input type="checkbox" id="' + thisID + '"' + (data ? ' checked' : '') + ' onchange="updatePreset(event)" />';
 			break;
 		case control_colour:
-			//break;
+			output += JSON.stringify(typeInfo);
+			break;
 		case control_colour_bar:
-			//break;
+			output += JSON.stringify(typeInfo);
+			break;
 		case control_button:
-			//break;
+			output += '<input type="button" onclick="' + typeInfo.onclick + '" value="' + typeInfo.value + '" />';
+			break;
 		case control_dropdown:
 			//break;
 		case control_slider:
