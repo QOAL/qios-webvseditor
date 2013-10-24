@@ -374,6 +374,7 @@ function dropHandler(event) {
 	//We'll just deal with a single preset for now
 	// In the future avs/webvs presets can be shoved in to an array or put in to local storage
 	var dropFile = event.dataTransfer.files[0];
+	if (!dropFile) { return; }
 
 	//dropFile.name.toLowerCase().substr(-4) == '.avs'
 	if (dropFile.name.toLowerCase().substr(-6) != '.webvs') { return; }
@@ -528,8 +529,8 @@ function newEditorWindow() {
 	if (haveWindow.editor) { return; } //Probably should move the actual window into focus.
 	//Need to make sure there is only one of these at a time!
 	var editorMarkup = '<div class="winnav"><input type="button" value="Preset" id="navPreset" /><input type="button" value="Edit" id="navEdit" /><input type="button" value="Settings" id="navSettings" /><div class="winnavSpacer"></div><input type="button" value="Help" id="navHelp" /></div>' +
-				'<div id="treeEffectHost"><div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value=" - " onclick="removeSelected()" />' +
-				'<input type="button" value=" + " onclick="showMenu(event, 2);" />' +
+				'<div id="treeEffectHost"><div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value="&nbsp;-&nbsp;" onclick="removeSelected()" />' +
+				'<input type="button" value="&nbsp;+&nbsp;" onclick="showMenu(event, 2);" />' +
 				'<input type="button" value="x2" onclick="duplicatedSelected()" /></div>' +
 				'<div id="editorTree"><div id="treeSelectedBG"></div><ul></ul></div></div>' +
 				'<div id="treeEffectGrip" class="resizeGrip"></div>' +
@@ -614,7 +615,7 @@ function stopWebVS() {
 	if (!haveWebVS) { return; }
 
 	webvs.stop();
-	dancer.stop();
+	dancer.pause();
 
 	webVSActive = false;
 
