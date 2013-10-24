@@ -85,8 +85,10 @@ var effectInfo = {
 				"onBeat": { label: "On Beat", control: control_code },
 				"perPoint": { label: "Per Pixel", control: control_code, "height": 80 }
 			},
-			"coordinates": { label: "Rectangular coordinates:", control: control_check, "default": false }
-		}
+			"coordinates": { label: "Rectangular coordinates:", control: control_check, "default": false },
+			"help": { control: control_button, "value": "Expression Help", "onclick": "newExpressionHelpWindow('DynamicMovement');" }
+		},
+		"help": "Dynamic movement help goes here (send me some :)"
 	},
 	"Blur": {
 		"name": "Blur",

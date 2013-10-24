@@ -375,7 +375,7 @@ div.pbm {
 	background: linear-gradient(to bottom, #f3f3f3 0%, #ececec 40%, #e4e4e4 60%, #dfdfdf 100%);
 	/*line-height: 22px;*/
 	border-bottom: 1px solid #d0d0d0;
-	height: 22px;
+	height: 24px;
 
 	display: flex;
 	flex-direction: row;
