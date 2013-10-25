@@ -46,6 +46,8 @@ var globalMenus = [
 	Oh yeah, this editor should have language support I guess
 
 	It would be cool to have a little icon for each element type.
+
+	Menus can go off the screen. :(
 */
 
 var preset = {"clearFrame": false, "components": []};
@@ -138,6 +140,8 @@ function mousemove(e) {
 		thisWindow.style.height = thisWindow.offsetHeight + (mousePos[1] - windows[wrid].resize.y) + "px";
 		windows[wrid].resize.x = mousePos[0];
 		windows[wrid].resize.y = mousePos[1];
+		windows[wrid].width = thisWindow.offsetWidth;
+		windows[wrid].height = thisWindow.offsetHeight - 22;
 	}
 
 	if (resizeGripper != null) {
@@ -241,7 +245,9 @@ function mousedown(e) {
 		document.body.style.cursor = "col-resize";
 	}
 
-	if (selectedEle && selectedEle.id && selectedEle.className == "titlebar" && e.which == 1) { mdti = selectedEle.id.substr(1); };
+	if (selectedEle && selectedEle.id && selectedEle.className == "titlebar" && e.which == 1 && !windows[selectedEle.id.substr(1)].maximised) {
+		mdti = selectedEle.id.substr(1);
+	}
 
 	while (selectedEle && selectedEle.className.substr(0, 6) != 'window' && selectedEle != null && selectedEle != document.body) {
 		selectedEle = selectedEle.parentNode;
@@ -338,6 +344,8 @@ function mouseup(e) {
 
 			buildEditorTree();
 
+			updateWebVSPreset();
+
 			//Select the newly moved effect
 			if (document.getElementById('ET-' + treePos.join('-'))) {
 				var evt = document.createEvent("MouseEvents");
@@ -400,14 +408,15 @@ function sortWindowsZIndex(topid) {
 			tWO.push(wzi[i]);
 		}
 	}
-	if (topid && windows[topid] != null) {
+
+	if (topid > -1 && windows[topid] != null) {
 		tWO.push(topid);
-		//document.getElementById(wID).className = 'titlebar active';
 	}
 
 	for (var i = 0; i < tWO.length; i++) {
 		document.getElementById('w' + tWO[i]).style.zIndex = i;
-		document.getElementById('w' + tWO[i]).setAttribute('class', 'window' + (i == tWO.length - 1 ? ' activeWindow' : ''));
+		var tmpClass = document.getElementById('w' + tWO[i]).getAttribute('class').replace(' activeWindow', '');
+		document.getElementById('w' + tWO[i]).setAttribute('class', i == tWO.length - 1 ? tmpClass + ' activeWindow': tmpClass);
 	}
 	wzi = tWO;
 }
@@ -433,6 +442,15 @@ function closeWindow(evt, id) {
 }
 
 function showWindow(id, show) {
+	if (windows[id].maximised) {
+		if (document.getElementById('w' + id).style.display == 'none' || wzi[wzi.length - 1] != id) {
+			document.getElementById('w' + id).style.display = 'block';
+			sortWindowsZIndex(id);
+		} else {
+			document.getElementById('w' + id).style.display = 'none';
+		}
+		return;
+	}
 	if (show && document.getElementById('w' + id).style.display != 'none') {
 		if (wzi[wzi.length - 1] == id) {
 			document.getElementById('w' + id).style.display = 'none';
@@ -445,12 +463,35 @@ function showWindow(id, show) {
 	}
 }
 
+function maximiseWindow(id) {
+	windows[id].maximised = !windows[id].maximised;
+	var thisWindow = document.getElementById('w' + id);
+	var tmpClass = thisWindow.getAttribute('class').replace(' maximised', '');
+	thisWindow.setAttribute('class', windows[id].maximised ? tmpClass + ' maximised': tmpClass);
+	thisWindow.style.left = (windows[id].maximised ? 0 : windows[id].pos.x) + "px";
+	thisWindow.style.top = (windows[id].maximised ? 0 : windows[id].pos.y) + "px";
+	thisWindow.style.width = (windows[id].maximised ? area.offsetWidth : windows[id].width) + "px";
+	thisWindow.style.height = (windows[id].maximised ? area.offsetHeight - 20 : windows[id].height + 22) + "px";
+}
+
 function startWindowResize(e) {
 	var wID = e.target.id.substr(2);
 	if (!windows[wID] || windows[wID] == null || e.button != 0) { return; }
 	windows[wID].resize = {"state": 1, "x": e.pageX, "y": e.pageY};
 	wrid = wID;
 	document.body.style.cursor = 'nwse-resize';
+}
+
+function handleWindowResize(e) {
+	//For now we're just making sure maximised windows look correct
+	// It would be a good idea to stop normal windows getting lost too.
+	var nW = area.offsetWidth + "px", nH = area.offsetHeight - 20 + "px";
+	for (var i = 0; i < windows.length; i++) {
+		if (windows[i] && windows[i].maximised) {
+			document.getElementById('w' + i).style.width = nW;
+			document.getElementById('w' + i).style.height = nH;
+		}
+	}
 }
 
 function newWindow(info) {
@@ -472,13 +513,14 @@ function newWindow(info) {
 	windows[wID].wID = wID;
 	if (!windows[wID].icon) { windows[wID].icon = 'appicon2.png'; }
 	if (!windows[wID].caption) { windows[wID].caption = 'Window ' + wID; }
+	windows[wID].maximised = false;
 	var newWin = document.createElement('div');
 	newWin.className = 'window';
 	newWin.id = 'w' + wID;
 	if (windows[wID].name) { newWin.name = windows[wID].name; }
 	newWin.innerHTML = '<div id="t' + wID + '" class="titlebar">' +
 		'<div class="titlebarIcon" style="background-image: url(' + windows[wID].icon + ')"></div><div class="titlebarCaption">' + windows[wID].caption + '</div>' +
-		'<div class="titlebarButton" title="Minimize" onclick="showWindow(' + wID + ', false)"></div><div class="titlebarButton"></div><div class="titlebarButton" title="Close" onclick="closeWindow(event, ' + wID + ')"></div></div>' +
+		'<div class="titlebarButton" title="Minimize" onclick="showWindow(' + wID + ', false)"></div>' + (!info.disableMaximise ? '<div class="titlebarButton" title="Maximise" onclick="maximiseWindow(' + wID + ')"></div>' : '<div class="titlebarButton disabledTitlebarButton"></div>') + '<div class="titlebarButton" title="Close" onclick="closeWindow(event, ' + wID + ')"></div></div>' +
 		'<div id="f' + wID + '" class="form">' + (windows[wID].form ? windows[wID].form : '') + '</div><div class="winb"></div>' + (info.resizeable ? '<div class="winresize windowCurve" id="wr' + wID + '"></div>' : '');
 	newWin.style.width = windows[wID].width ? windows[wID].width + "px" : "auto";
 	newWin.style.height = windows[wID].height ? windows[wID].height + 22 + "px": "auto";
@@ -554,9 +596,9 @@ function newEditorWindow() {
 	haveWindow.editor = true;
 }
 
-function newWebVSWindow() {
+function newWebVSWindow() { //Doesn't support resolution changing right now -- need to make it call webvs.resetCanvas()
 	if (!haveWebVS || haveWindow.webvs) { return; }
-	newWindow({"caption": "WebVS", "icon": "icon.png", "width": 640, "height": 480, "form": '<canvas style="background-color:#000;" width="640" height="480" id="webvsCanvas"></canvas>', "init": startWebVS, "close": stopWebVS});
+	newWindow({"caption": "WebVS", "icon": "icon.png", "width": 640, "height": 480, "disableMaximise": true, "form": '<canvas style="background-color:#000;" width="640" height="480" id="webvsCanvas"></canvas>', "init": startWebVS, "close": stopWebVS});
 	haveWindow.webvs = true;
 }
 
@@ -586,7 +628,7 @@ function newExpressionHelpWindow(effect) {
 
 	markUp += '</textarea><input type="button" style="margin-left:0;" onclick="closeWindow(event, event.target.parentNode.parentNode.id.substr(1))" value="Close" /></div>';
 
-	newWindow({"caption": "WebVS Expression Help", "icon": "icon.png", "width": 467, "height": 375, "form": markUp, "close": function(){haveWindow.expression=false}});
+	newWindow({"caption": "WebVS Expression Help", "icon": "icon.png", "width": 467, "height": 375, "disableMaximise": true, "form": markUp, "close": function(){haveWindow.expression=false}});
 
 	haveWindow.expression = true;
 }
@@ -940,7 +982,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			output += '<input type="checkbox" id="' + thisID + '"' + (data ? ' checked' : '') + ' onchange="updatePreset(event)" />';
 			break;
 		case control_colour:
-			output += JSON.stringify(typeInfo);
+			output += '<input type="color" id="' + thisID + '" value="' + data + '" />';
 			break;
 		case control_colour_bar:
 			output += JSON.stringify(typeInfo);
@@ -1246,12 +1288,7 @@ function init() {
 	eventHook(document, "mousemove", mousemove);
 	eventHook(document, "mousedown", mousedown);
 	eventHook(document, "mouseup", mouseup);
-	/*wrf = function() {
-		document.body.style.height = window.innerHeight - 22 + "px";
-		area.style.height = window.innerHeight + "px";
-		area.style.width = window.innerWidth + "px";
-	}; wrf();
-	eventHook(window, "resize", wrf);*/
+	eventHook(window, "resize", handleWindowResize);
 	eventHook(document, "keypress", keypress);
 	//eventHook(document, "mouseover", areaVis);
 	//eventHook(document, "mouseout", areaVis);
