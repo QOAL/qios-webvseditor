@@ -988,10 +988,10 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			output += '<input type="checkbox" id="' + thisID + '"' + (data ? ' checked' : '') + ' onchange="updatePreset(event)" />';
 			break;
 		case control_colour:
-			output += '<input type="color" id="' + thisID + '" value="' + data + '" />';
+			output += '<input type="color" id="' + thisID + '" value="' + (data ? data : typeInfo.default) + '" />';
 			break;
 		case control_colour_bar:
-			output += JSON.stringify(typeInfo);
+			output += name + ': ' + JSON.stringify(typeInfo) + (data ? ', ' + data : '');
 			break;
 		case control_button:
 			output += '<input type="button" onclick="' + typeInfo.onclick + '" value="' + typeInfo.value + '" />';
@@ -1003,7 +1003,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 		case control_label:
 			//break;
 		default:
-			output += JSON.stringify(typeInfo);
+			output += name + ': ' + JSON.stringify(typeInfo) + (data ? ', ' + data : '');
 	}
 	/*if (!data.control) {
 		for (var i = 0; i < typeInfo.length; i++) {
