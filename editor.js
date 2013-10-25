@@ -527,6 +527,9 @@ function newWindow(info) {
 
 	document.getElementById("windowcontainer").appendChild(newWin);
 
+	if (!windows[wID].width) { windows[wID].width = newWin.offsetWidth; }
+	if (!windows[wID].height) { windows[wID].height = newWin.offsetHeight - 22; }
+
 	if (!windows[wID].pos) {
 		windows[wID].pos = {x: -1, y: -1};
 	}
