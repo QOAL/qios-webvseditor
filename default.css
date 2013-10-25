@@ -348,6 +348,12 @@ li.menuspacer {
 	width: 160px;
 	margin: 0 5px 0 0;
 	text-shadow: 1px 1px 0 #000;
+	position: relative;
+	opacity: .66;
+}
+
+.tbwindow.activeWindow {
+	opacity: 1;
 }
 
 #appholder .titlebarIcon {

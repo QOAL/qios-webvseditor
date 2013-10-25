@@ -417,6 +417,8 @@ function sortWindowsZIndex(topid) {
 		document.getElementById('w' + tWO[i]).style.zIndex = i;
 		var tmpClass = document.getElementById('w' + tWO[i]).getAttribute('class').replace(' activeWindow', '');
 		document.getElementById('w' + tWO[i]).setAttribute('class', i == tWO.length - 1 ? tmpClass + ' activeWindow': tmpClass);
+
+		document.getElementById('tb' + tWO[i]).setAttribute('class', i == tWO.length - 1 ? 'tbwindow activeWindow': 'tbwindow');
 	}
 	wzi = tWO;
 }
@@ -518,7 +520,7 @@ function newWindow(info) {
 	newWin.className = 'window';
 	newWin.id = 'w' + wID;
 	if (windows[wID].name) { newWin.name = windows[wID].name; }
-	newWin.innerHTML = '<div id="t' + wID + '" class="titlebar">' +
+	newWin.innerHTML = '<div id="t' + wID + '" class="titlebar"' + (!info.disableMaximise ? ' ondblclick="maximiseWindow(' + wID + ')"' : '') + '>' +
 		'<div class="titlebarIcon" style="background-image: url(' + windows[wID].icon + ')"></div><div class="titlebarCaption">' + windows[wID].caption + '</div>' +
 		'<div class="titlebarButton" title="Minimize" onclick="showWindow(' + wID + ', false)"></div>' + (!info.disableMaximise ? '<div class="titlebarButton" title="Maximise" onclick="maximiseWindow(' + wID + ')"></div>' : '<div class="titlebarButton disabledTitlebarButton"></div>') + '<div class="titlebarButton" title="Close" onclick="closeWindow(event, ' + wID + ')"></div></div>' +
 		'<div id="f' + wID + '" class="form">' + (windows[wID].form ? windows[wID].form : '') + '</div><div class="winb"></div>' + (info.resizeable ? '<div class="winresize windowCurve" id="wr' + wID + '"></div>' : '');
@@ -546,7 +548,6 @@ function newWindow(info) {
 		newWin.style.top = windows[wID].pos.y + "px";
 	}
 	newWin.style.zIndex = wzi.push(wID) - 1; //we don't support always on top order yet.
-	sortWindowsZIndex(wID); //Sort the windows here to change the active window CSS
 
 	if (info.minwidth) { newWin.style.minWidth = info.minwidth + "px"; }
 
@@ -564,6 +565,8 @@ function newWindow(info) {
 	eventHook(newItem, 'click', showthis);
 	newItem.innerHTML = '<div class="titlebarIcon" style="background-image: url(' + windows[wID].icon + ')"></div>' + windows[wID].caption;
 	document.getElementById("appholder").appendChild(newItem);
+
+	sortWindowsZIndex(wID); //Sort the windows here to change the active window CSS
 
 	if (info.init) { windows[wID].init = info.init; windows[wID].init(); }
 
