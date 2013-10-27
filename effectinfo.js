@@ -103,7 +103,7 @@ var effectInfo = {
 		"type": "Trans",
 		"pane": {
 			"mode": { control: control_radio, "options": ["Off", "Below", "Above", "Near"], "default": 1 },
-			"nearclip": { control: control_slider, "default": .2 },
+			"level": { label: "Near clip level:", control: control_slider, "default": .2 },
 			"color": { label: "Colour:", control: control_colour, "default": "#202020" },
 			/*"button": { control: control_button, "value": "Copy to Out Colour" },*/
 			"outColor": { label: "Out Colour:", control: control_colour, "default": "#202020" }

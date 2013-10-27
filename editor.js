@@ -122,7 +122,7 @@ function mousemove(e) {
 	if (mdti != -1 && windows[mdti].fixed != true) {
 		//Not that the code would go here but still, if they resize the viewport check for windows being off screen!
 		cWin = document.getElementById('w' + mdti);
-		if (mdwi == -1) { mdwi = mdti; cWin.style.opacity = .625; }
+		if (mdwi == -1) { mdwi = mdti; /*cWin.style.opacity = .625;*/ }
 		windows[mdti].pos.x += mousePos[0] - oMousePos[0];
 		windows[mdti].pos.y += mousePos[1] - oMousePos[1];
 		if (windows[mdti].pos.x > window.innerWidth - 25) { windows[mdti].pos.x = window.innerWidth - 25; }
@@ -268,7 +268,7 @@ function mousedown(e) {
 function mouseup(e) {
 	mdti = -1;
 	if (mdwi != -1) {
-		document.getElementById('w' + mdwi).style.opacity = 1;
+		/*document.getElementById('w' + mdwi).style.opacity = 1;*/
 		mdwi = -1;
 	}
 	if (wrid != -1 && e.button == 0) {
@@ -705,6 +705,7 @@ function showMenu(e, markup, left, top, right, bottom) {
 	} else if (markup.substr(0, 1) == '#') {
 		markup = document.getElementById(markup.substr(1)).innerHTML;
 	}
+	gMenu.innerHTML = markup;
 
 	if (!right) {
 		gMenu.style.left = (left ? left : e.pageX + 2 + "px");
@@ -721,8 +722,52 @@ function showMenu(e, markup, left, top, right, bottom) {
 		gMenu.style.top = '';
 	}
 
-	gMenu.innerHTML = markup;
 	gMenu.style.display = 'block';
+
+	//This keeps the menu on the screen, children will still go off the edge.
+	if (gMenu.offsetLeft + gMenu.offsetWidth > area.offsetWidth - 2) {
+		gMenu.style.left = area.offsetWidth - gMenu.offsetWidth - 2 + "px";
+	}
+	//Hmm, this will lead to nav menus being places over their button
+	/*if (gMenu.offsetTop + gMenu.offsetHeight > area.offsetHeight - 5) {
+		gMenu.style.top = gMenu.offsetTop - gMenu.offsetHeight + "px";
+	}*/
+	addSubMenuPostionFix(gMenu.childNodes[0]);
+}
+
+function addSubMenuPostionFix(node) {
+	for (var i = 0; i < node.childNodes.length; i++) {
+		if (node.childNodes[i].childNodes[1] && node.childNodes[i].childNodes[1].tagName == 'UL') {
+			eventHook(node.childNodes[i], "mouseover", positionSubMenu);
+			addSubMenuPostionFix(node.childNodes[i].childNodes[1]);
+		}
+	}
+}
+
+function positionSubMenu(e) {
+	//Check if this is the UL and not a LI
+	//Is this menu going off the screen or is it going to overlap its parent?
+	var ele = e.target.tagName == "UL" ? e.target : e.target.childNodes[1] && e.target.childNodes[1].tagName == "UL" ? e.target.childNodes[1] : null;
+	if (!ele) { return; }
+	eventHook(ele, "mouseover", positionSubMenu, true);
+
+	//Climb the tree to for the global parent, so we can work out the menu's position from it.
+	var tmpLeft = ele.offsetLeft + ele.offsetWidth;
+	//var tmpTop = ele.offsetTop + ele.offsetHeight;
+	var tmpEl = ele.offsetParent;
+	var hasMargin = false;
+	while (tmpEl != gMenu.parentNode) {
+		if (tmpEl.tagName == 'UL' && tmpEl.style.margin) { hasMargin = true; break; }
+		tmpLeft += tmpEl.offsetLeft;
+		//tmpTop += tmpEl.offsetTop;
+		tmpEl = tmpEl.offsetParent;
+	}
+	if (hasMargin || tmpLeft > area.offsetWidth - 2) {
+		ele.style.marginLeft = -ele.parentNode.offsetWidth - ele.offsetWidth + "px";
+	}
+	/*if (tmpTop > area.offsetHeight - 5) {
+		ele.style.marginTop = area.offsetHeight - tmpTop - 5 + "px";
+	}*/
 }
 
 function hideMenu() {
@@ -965,7 +1010,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 	if (typeof data == 'undefined' || typeof typeInfo.control == 'undefined') { return ''; }
 	var thisID = (parent != '' ? parent + '-' : '') + name;
 	var output = '<div class="paneElementHost">'
-	if (typeInfo.label) {	output += "<div" + (typeInfo.control != control_code ? ' style="display:inline;margin-right:5px;" ' : '') + ">" + typeInfo.label + "</div>"; }
+	if (typeInfo.label) {	output += "<div" + (typeInfo.control != control_code ? ' style="display:inline;margin-right:5px;" ' : '') + ">" + lameHTMLSpecialChars(typeInfo.label) + "</div>"; }
 	switch (typeInfo.control) {
 		case control_null:
 			//
@@ -997,9 +1042,11 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			output += '<input type="button" onclick="' + typeInfo.onclick + '" value="' + typeInfo.value + '" />';
 			break;
 		case control_dropdown:
-			//break;
+			output += name + ': ' + JSON.stringify(typeInfo) + (data ? ', ' + data : '');
+			break;
 		case control_slider:
-			//break;
+			output += '<input type="range" min="0" max="1" step="0.025" value="' + (data ? data : typeInfo.default) + '" />';
+			break;
 		case control_label:
 			//break;
 		default:
@@ -1054,8 +1101,8 @@ function popOutThis(e) {
 		var effectElement = effectInfo[node.type].pane[effectID];
 		var effectData = node[effectID];
 	}
-
-	var popoutMarkup = '<div class="popoutHost"><textarea class="popoutElement" id="' + popID + '" onchange="updatePreset(event)" wrap="off" spellcheck="false">' + (effectData ? effectData : '') + '</textarea><div class="popoutStatusBar" onclick="selectFromPopout(event)" title="Click to select this effect in the editor">' + treeTrail + '</div></div>';
+	//wrap="off"
+	var popoutMarkup = '<div class="popoutHost"><textarea class="popoutElement" id="' + popID + '" onchange="updatePreset(event)" spellcheck="false">' + (effectData ? effectData : '') + '</textarea><div class="popoutStatusBar" onclick="selectFromPopout(event)" title="Click to select this effect in the editor">' + treeTrail + '</div></div>';
 	var wID = newWindow({"caption": selectedEffect.textContent + ' &gt; ' + e.target.parentNode.childNodes[0].textContent, "icon": "icon.png", "width": 320, "height": 320, "resizeable": true, "form": popoutMarkup, "close": popOutCloseThis});
 	windows[wID].popID = [selectedEffect.id, effectID];
 }
