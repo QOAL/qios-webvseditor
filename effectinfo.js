@@ -50,9 +50,9 @@ var effectInfo = {
 				"onBeat": { label: "On Beat", control: control_code },
 				"perPoint": { label: "Per Point", control: control_code, "height": 80 }
 			},
-			"source": { label: "Source data:", control: control_radio, "options": ["Waveform", "Spectrum"], "default": 0 },
-			"audioChannel": { label: "Channel:", control: control_radio, "options": ["Left", "Centre", "Right"], "default": 1 },
-			"lineType": { label: "Draw as:", control: control_radio, "options": ["Dots", "Lines"], "default": 1},
+			"source": { label: "Source data:", control: control_radio, "options": {"WAVEFORM": "Waveform", "SPECTRUM": "Spectrum"}, "default": "SPECTRUM" },
+			"audioChannel": { label: "Channel:", control: control_radio, "options": {"LEFT": "Left", "CENTER": "Centre", "RIGHT": "Right"}, "default": "CENTER" },
+			"lineType": { label: "Draw as:", control: control_radio, "options": {"DOTS": "Dots", "LINES": "Lines"}, "default": "LINES"},
 			"colour": {
 				"count": { label: "Cycle through", control: control_number, "min": 1, "max": 16, "default": 1 },
 				"list": { label: "Colours (Max 16)", control: control_colour_bar}
@@ -85,7 +85,7 @@ var effectInfo = {
 				"onBeat": { label: "On Beat", control: control_code },
 				"perPoint": { label: "Per Pixel", control: control_code, "height": 80 }
 			},
-			"coordinates": { label: "Rectangular coordinates:", control: control_check, "default": false },
+			"coordinates": { label: "Coordinates system:", control: control_radio, "options": {"POLAR": "Polar", "RECT": "Rectangular"}, "default": "POLAR" },
 			"help": { control: control_button, "value": "Expression Help", "onclick": "newExpressionHelpWindow('DynamicMovement');" }
 		},
 		"help": "Dynamic movement help goes here (send me some :)"
@@ -94,15 +94,15 @@ var effectInfo = {
 		"name": "Blur",
 		"type": "Trans",
 		"pane": {
-			"blur": { label: "Strength:", control: control_radio, "options": ["None", "Light", "Medium", "Heavy"], "default": 2 },
-			"rounding": { label: "Rounding:", control: control_radio, "options": ["Down", "Up"], "default": 0 }
+			"blur": { label: "Strength:", control: control_radio, "options": {"NONE": "None", "LIGHT": "Light", "MEDIUM": "Medium", "HEAVY": "Heavy"}, "default": "MEDIUM" },
+			"rounding": { label: "Rounding:", control: control_radio, "options": {"DOWN": "Down", "UP": "Up"}, "default": "DOWN" }
 		}
 	},
 	"ColorClip": {
 		"name": "Colour Clip",
 		"type": "Trans",
 		"pane": {
-			"mode": { control: control_radio, "options": ["Off", "Below", "Above", "Near"], "default": 1 },
+			"mode": { control: control_radio, "options": {"OFF": "Off", "BELOW": "Below", "ABOVE": "Above", "NEAR": "Near"}, "default": "BELOW" },
 			"level": { label: "Near clip level:", control: control_slider, "default": .2 },
 			"color": { label: "Colour:", control: control_colour, "default": "#202020" },
 			/*"button": { control: control_button, "value": "Copy to Out Colour" },*/

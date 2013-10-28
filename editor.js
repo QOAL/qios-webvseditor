@@ -1025,6 +1025,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			output += '<input id="' + thisID + '" type="number"' + (typeInfo.min ? ' min="' + typeInfo.min + '"' : '') + ' ' + (typeInfo.max ? ' max="' + typeInfo.max + '"' : '') + ' onchange="updatePreset(event)" value="' + (parseInt(data) == data ? data : typeInfo.default) + '"/>';
 			break;
 		case control_radio:
+			if (!data || !typeInfo.options[data]) { data = typeInfo.default; }
 			for (var o in typeInfo.options) {
 				output += '<label>' + typeInfo.options[o] + '<input type="radio" name="' + thisID + '" id="' + thisID + '"' + (o == data ? ' checked' : '') + ' value="' + o + '" onchange="updatePreset(event)" /></label> ';
 			}
