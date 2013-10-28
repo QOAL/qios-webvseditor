@@ -1027,7 +1027,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 		case control_radio:
 			if (!data || !typeInfo.options[data]) { data = typeInfo.default; }
 			for (var o in typeInfo.options) {
-				output += '<label>' + typeInfo.options[o] + '<input type="radio" name="' + thisID + '" id="' + thisID + '"' + (o == data ? ' checked' : '') + ' value="' + o + '" onchange="updatePreset(event)" /></label> ';
+				output += (typeInfo.newLine ? '<br />' : '') + '<label><input type="radio" name="' + thisID + '" id="' + thisID + '"' + (o == data ? ' checked' : '') + ' value="' + o + '" onchange="updatePreset(event)" />' + typeInfo.options[o] + '</label>' + (typeInfo.newLine ? '' : ' ');
 			}
 			break;
 		case control_check:
@@ -1043,7 +1043,21 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			output += '<input type="button" onclick="' + typeInfo.onclick + '" value="' + typeInfo.value + '" />';
 			break;
 		case control_dropdown:
-			output += name + ': ' + JSON.stringify(typeInfo) + (data ? ', ' + data : '');
+			output += '<select name="' + thisID + '" id="' + thisID + '" onchange="updatePreset(event)">';
+			if (typeInfo.options == "IMAGES") {
+				if (avsres) {
+					for (var o in avsres) {
+						output += '<option value="' + o + '"' + (o == data ? ' selected': '') + '>' + o + '</option>';
+					}
+				} else {
+					output += '<option selected disabled>No images avaliable</option>';
+				}
+			} else {
+				for (var o in typeInfo.options) {
+					output += '<option value="' + o + '"' + (o == data ? ' selected': '') + '>' + typeInfo.options[o] + '</option>';
+				}
+			}
+			output += '</select>';
 			break;
 		case control_slider:
 			output += '<input type="range" min="0" max="1" step="0.025" value="' + (data ? data : typeInfo.default) + '" />';
@@ -1191,6 +1205,8 @@ function removeSelected() {
 function updatePreset(e) {
 	if (e.target.type && e.target.type == "checkbox") {
 		var newValue = e.target.checked;
+	} else if (e.target.type && e.target.tagName == "SELECT") {
+		var newValue = e.target.options[e.target.selectedIndex].value;
 	} else {
 		var newValue = e.target.value;
 	}

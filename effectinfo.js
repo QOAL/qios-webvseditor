@@ -94,8 +94,8 @@ var effectInfo = {
 		"name": "Blur",
 		"type": "Trans",
 		"pane": {
-			"blur": { label: "Strength:", control: control_radio, "options": {"NONE": "None", "LIGHT": "Light", "MEDIUM": "Medium", "HEAVY": "Heavy"}, "default": "MEDIUM" },
-			"rounding": { label: "Rounding:", control: control_radio, "options": {"DOWN": "Down", "UP": "Up"}, "default": "DOWN" }
+			"blur": { label: "Strength:", control: control_radio, "options": {"NONE": "None", "LIGHT": "Light", "MEDIUM": "Medium", "HEAVY": "Heavy"}, "default": "MEDIUM", "newLine": true},
+			"rounding": { label: "Rounding:", control: control_radio, "options": {"DOWN": "Down", "UP": "Up"}, "default": "DOWN", "newLine": true}
 		}
 	},
 	"ColorClip": {
@@ -107,6 +107,15 @@ var effectInfo = {
 			"color": { label: "Colour:", control: control_colour, "default": "#202020" },
 			/*"button": { control: control_button, "value": "Copy to Out Colour" },*/
 			"outColor": { label: "Out Colour:", control: control_colour, "default": "#202020" }
+		}
+	},
+	"Picture": {
+		"name": "Picture",
+		"type": "Render",
+		"pane": {
+			"enabled": { label: "Enabled:", control: control_check, "default": true },
+			"src": { control: control_dropdown, "options": "IMAGES"},
+			"blendMode": { label: "Blend mode:", control: control_radio, "options": {"REPLACE": "Replace", "ADDITIVE": "Additive blend", "5050": "Blend 50/50", "5050OBA": "Blend 50/50 + OnBeat Additive"}, "default": "5050", "newLine": true }
 		}
 	}
 };
