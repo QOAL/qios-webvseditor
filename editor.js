@@ -29,7 +29,7 @@ var editorMenuActiveElement = null;
 var navGlobalPos = {'navPreset': 3, 'navEdit': 4, 'navSettings': 5, 'navHelp': 6};
 var globalMenus = [
 	'',
-	'<ul><li onclick="newWindow({\'caption\': \'Blank window\', \'icon\': \'16x16x8_.png\', \'height\': 100});"/><div class="menuicon"></div>New blank window</li><li onclick="newEditorWindow();"><div class="menuicon" style="background:url(icon.png);"></div>WebVS Editor</li></ul>',
+	'<ul><li onclick="newWindow({\'caption\': \'Blank window\', \'icon\': \'16x16x8_.png\', \'height\': 100});"/><div class="menuicon"></div>New blank window</li><li onclick="newWebVSWindow();"/><div class="menuicon"></div>WebVS</li><li onclick="newEditorWindow();"><div class="menuicon" style="background:url(icon.png);"></div>WebVS Editor</li></ul>',
 	'',
 	'<ul><li>Load...</li><li>Save...</li><li class="menuspacer"></li><li>New</li></ul>',
 	'<ul><li>Undo</li><li>Redo</li></ul>',
@@ -1348,7 +1348,7 @@ function fetchPreset() {
 			//this.status + '<br />' + this.responseText;
 		}
 	};
-	xhrFetch.open("get", "Jeheriko_141.webvs", false);
+	xhrFetch.open("get", "UnConeD_JelloCube.webvs", false); //"Jeheriko_141.webvs"
 	xhrFetch.send();
 }
 
@@ -1372,8 +1372,8 @@ function init() {
 	newEditorWindow();
 
 	haveWebVS = typeof Dancer != 'undefined' && typeof Webvs != 'undefined' ? true : false;
-	haveWebVS = false;
-	if (haveWebVS) { newWebVSWindow(); }
+	//haveWebVS = false;
+	//if (haveWebVS) { newWebVSWindow(); }
 
 	//We need some way of registering windows onload, that'll let us add them to menus and stuff if they want to be placed on one.
 }

@@ -654,6 +654,8 @@ div.pbm {
 	padding: 4px;
 	border: none;
 	overflow: scroll;
+	overflow-x: hidden; /* As wrap="off" isn't used now we don't need this scroll bar */
+	overflow-y: scroll;
 	resize: none;
 }
 
