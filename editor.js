@@ -1031,7 +1031,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			}
 			break;
 		case control_check:
-			output += '<input type="checkbox" id="' + thisID + '"' + (data ? ' checked' : '') + ' onchange="updatePreset(event)" />';
+			output += '<input type="checkbox" id="' + thisID + '"' + ((typeof data != "boolean" && typeInfo.default) || data ? ' checked' : '') + ' onchange="updatePreset(event)" />';
 			break;
 		case control_colour:
 			output += '<input type="color" id="' + thisID + '" value="' + (data ? data : typeInfo.default) + '" />';

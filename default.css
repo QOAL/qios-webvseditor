@@ -10,7 +10,7 @@ body {
 
 /* * { cursor: url(mouse.png) 1 2, default; }*/
 
-body, input, textarea {
+body, input, textarea, option, select {
 	font-size: x-small;
 	font-family: verdana, arial, helvetica, sans-serif;
 }
