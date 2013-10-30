@@ -1010,7 +1010,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 	if (typeof data == 'undefined' || typeof typeInfo.control == 'undefined') { return ''; }
 	var thisID = (parent != '' ? parent + '-' : '') + name;
 	var output = '<div class="paneElementHost">'
-	if (typeInfo.label) {	output += "<div" + (typeInfo.control != control_code ? ' style="display:inline;margin-right:5px;" ' : '') + ">" + lameHTMLSpecialChars(typeInfo.label) + "</div>"; }
+	if (typeInfo.label) { output += "<div" + (typeInfo.control != control_code ? ' style="display:inline;margin-right:5px;" ' : '') + ">" + lameHTMLSpecialChars(typeInfo.label) + "</div>"; }
 	switch (typeInfo.control) {
 		case control_null:
 			//
@@ -1062,19 +1062,17 @@ function buildPaneElement(typeInfo, data, name, parent) {
 		case control_slider:
 			output += '<input type="range" min="0" max="1" step="0.025" value="' + (data ? data : typeInfo.default) + '" />';
 			break;
-		case control_label:
-			//break;
+		case control_kernel:
+			if (!data || typeof data != 'object') { data = Array.apply(null, new Array(7 * 7)).map(Number.prototype.valueOf, 0); }
+			var rows = Math.ceil(Math.sqrt(data.length));
+			for (var i = 0; i < data.length; i++) {
+				if (i % rows == 0) { output += '<br />'; }
+				output += '<input type="text" value="' + data[i] + '" id="' + thisID + i + '" style="width:14px;" />';
+			}
+			break;
 		default:
 			output += name + ': ' + JSON.stringify(typeInfo) + (data ? ', ' + data : '');
 	}
-	/*if (!data.control) {
-		for (var i = 0; i < typeInfo.length; i++) {
-			console.log(typeInfo[i], data[i]);
-			output += buildPaneElement(typeInfo[i], data[i]);
-		}
-	} else {
-		console.log(typeInfo, data);
-	}*/
 	return output + '</div>';
 }
 

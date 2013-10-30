@@ -12,7 +12,7 @@ var control_colour_bar = 0x7;
 var control_button = 0x8;
 var control_dropdown = 0x9;
 var control_slider = 0xA;
-var control_label = 0xB;
+var control_kernel = 0xB;
 
 var effectInfo = {
 	"unknown": {
@@ -116,6 +116,19 @@ var effectInfo = {
 			"enabled": { label: "Enabled:", control: control_check, "default": true },
 			"src": { control: control_dropdown, "options": "IMAGES"},
 			"blendMode": { label: "Blend mode:", control: control_radio, "options": {"REPLACE": "Replace", "ADDITIVE": "Additive blend", "5050": "Blend 50/50", "5050OBA": "Blend 50/50 + OnBeat Additive"}, "default": "5050", "newLine": true }
+		}
+	},
+	"Convolution": {
+		"name": "Convolution Filter",
+		"type": "Trans",
+		"pane": {
+			"enabled": { label: "Enabled:", control: control_check, "default": true },
+			"kernel": { label: "Filter data:", control: control_kernel },
+			"bias": { label: "Bias:", control: control_number, "default": 0 },
+			"scaling": { label: "Scaling:", control: control_number, "default": 0 },
+			"edgeMode": { label: "Viewport edge handling:", control: control_radio, "options": {"WRAP": "Wrap", "EXTEND": "Extend"}, "default": "EXTEND" },
+			"absolute": { label: "Absolute:", control: control_check, "default": false },
+			"twoPass": { label: "2-Pass:", control: control_check, "default": false }
 		}
 	}
 };
