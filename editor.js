@@ -427,6 +427,7 @@ function sortWindowsZIndex(topid) {
 function closeWindow(evt, id) {
 	if (evt.which == 1) {
 		if (windows[id].close) { windows[id].close(id); }
+		if (windows[id].name) { haveWindow[windows[id].name] = false; }
 		/*delete wzi[wzi.length - 1];
 		wzi = wzi.join().split();
 		delete windows[id];*/
@@ -466,6 +467,7 @@ function showWindow(id, show) {
 }
 
 function maximiseWindow(id) {
+	if (!windows[id]) { return; }
 	windows[id].maximised = !windows[id].maximised;
 	var thisWindow = document.getElementById('w' + id);
 	var tmpClass = thisWindow.getAttribute('class').replace(' maximised', '');
@@ -493,6 +495,16 @@ function handleWindowResize(e) {
 			document.getElementById('w' + i).style.width = nW;
 			document.getElementById('w' + i).style.height = nH;
 		}
+	}
+}
+
+function checkForWindow(name) {
+	if (typeof haveWindow[name] != "number") {
+		return false;
+	} else {
+		sortWindowsZIndex(haveWindow[name]);
+		document.getElementById('w' + haveWindow[name]).style.display = 'block';
+		return true;
 	}
 }
 
@@ -574,7 +586,7 @@ function newWindow(info) {
 }
 
 function newEditorWindow() {
-	if (haveWindow.editor) { return; } //Probably should move the actual window into focus.
+	if (checkForWindow("editor")) { return; } //Probably should move the actual window into focus.
 	//Need to make sure there is only one of these at a time!
 	var editorMarkup = '<div class="winnav"><input type="button" value="Preset" id="navPreset" /><input type="button" value="Edit" id="navEdit" /><input type="button" value="Settings" id="navSettings" /><div class="winnavSpacer"></div><input type="button" value="Help" id="navHelp" /></div>' +
 				'<div id="treeEffectHost"><div id="editorTreeHost"><div id="editorTreeButtons"><input style="float:right" type="button" value="&nbsp;-&nbsp;" onclick="removeSelected()" />' +
@@ -584,7 +596,7 @@ function newEditorWindow() {
 				'<div id="treeEffectGrip" class="resizeGrip"></div>' +
 				'<div id="effectHost"><fieldset><legend id="effectTitle">No effect/setting selected</legend><div id="effectContainer"></div></fieldset></div>' +
 				'</div><div id="editorStatusbar">60.0 FPS @ 640x480 - Preset Name</div>';
-	var wID = newWindow({"caption": "WebVS Editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree, "close": function(){haveWindow.editor=false}});
+	var wID = newWindow({"caption": "WebVS Editor", "name": "editor", "icon": "icon.png", "width": 640, "height": 480, "minwidth": 320, "resizeable": true, "form": editorMarkup, "init": buildEditorTree});
 
 	buildEffectMenu();
 
@@ -599,17 +611,16 @@ function newEditorWindow() {
 		}
 	}
 
-	haveWindow.editor = true;
+	haveWindow.editor = wID;
 }
 
 function newWebVSWindow() { //Doesn't support resolution changing right now -- need to make it call webvs.resetCanvas()
-	if (!haveWebVS || haveWindow.webvs) { return; }
-	newWindow({"caption": "WebVS", "icon": "icon.png", "width": 640, "height": 480, "disableMaximise": true, "form": '<canvas style="background-color:#000;" width="640" height="480" id="webvsCanvas"></canvas>', "init": startWebVS, "close": stopWebVS});
-	haveWindow.webvs = true;
+	if (!haveWebVS || checkForWindow("webvs")) { return; }
+	haveWindow.webvs = newWindow({"caption": "WebVS", "name": "webvs", "icon": "icon.png", "width": 640, "height": 480, "disableMaximise": true, "form": '<canvas style="background-color:#000;" width="640" height="480" id="webvsCanvas"></canvas>', "init": startWebVS, "close": stopWebVS});
 }
 
 function newExpressionHelpWindow(effect) {
-	if (haveWindow.expression) { return; }
+	if (checkForWindow("expression")) { return; }
 
 	//Work out which tab we're on
 	if (effect && effectInfo[effect] && effectInfo[effect].help) { selectedHelpTab = effect; }
@@ -634,9 +645,7 @@ function newExpressionHelpWindow(effect) {
 
 	markUp += '</textarea><input type="button" style="margin-left:0;" onclick="closeWindow(event, event.target.parentNode.parentNode.id.substr(1))" value="Close" /></div>';
 
-	newWindow({"caption": "WebVS Expression Help", "icon": "icon.png", "width": 467, "height": 375, "disableMaximise": true, "form": markUp, "close": function(){haveWindow.expression=false}});
-
-	haveWindow.expression = true;
+	haveWindow.expression = newWindow({"caption": "WebVS Expression Help", "name": "expression", "icon": "icon.png", "width": 467, "height": 375, "disableMaximise": true, "form": markUp});
 }
 
 function startWebVS() {
@@ -666,8 +675,6 @@ function stopWebVS() {
 	dancer.pause();
 
 	webVSActive = false;
-
-	haveWindow.webvs = false;
 }
 function updateWebVSPreset() {
 	if (!haveWebVS || !webVSActive) { return; }
