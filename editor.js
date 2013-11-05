@@ -48,9 +48,13 @@ var globalMenus = [
 	It would be cool to have a little icon for each element type.
 
 	Menus can go off the screen. :(
+
+	Once we have the ability to enqueue music we should add a playlist and the ability to assign presets to songs.
+		Though it would be cool if you could change regXX or gmegabuf value, which would allow for all in one preset that can control its own transitions.
 */
 
 var preset = {"clearFrame": false, "components": []};
+var presetIds = {};
 
 
 //From http://www.somacon.com/p355.php
@@ -378,27 +382,32 @@ function dropHandler(event) {
 	event.stopPropagation();
 	event.preventDefault();
 
+	if (!event.dataTransfer.files[0]) { return; }
+	var singlePresetLoaded = false;
 
-	//We'll just deal with a single preset for now
-	// In the future avs/webvs presets can be shoved in to an array or put in to local storage
-	var dropFile = event.dataTransfer.files[0];
-	if (!dropFile) { return; }
+	for (var i = 0; i < event.dataTransfer.files.length; i++) {
+		var dropFile = event.dataTransfer.files[i];
 
-	//dropFile.name.toLowerCase().substr(-4) == '.avs'
-	if (dropFile.name.toLowerCase().substr(-6) != '.webvs') { return; }
+		//dropFile.name.toLowerCase().substr(-4) == '.avs'
+		if (dropFile.name.toLowerCase().substr(-6) == '.webvs' && !singlePresetLoaded) {
+			reader.onload = (function() {
+				return function(e) {
+					var newPreset = JSON.parse(e.target.result);
+					//The simple confirm dialog here should be replaced in the future
+					if (newPreset && newPreset.components) { // && window.confirm("Overwrite the current preset?")
+						preset = newPreset;
+						buildEditorTree();
+						updateWebVSPreset();
+					}
+				};
+			})();
+			reader.readAsText(dropFile);
 
-	reader.onload = (function() {
-		return function(e) {
-			var newPreset = JSON.parse(e.target.result);
-			//The simple confirm dialog here should be replaced in the future
-			if (newPreset && newPreset.components) { // && window.confirm("Overwrite the current preset?")
-				preset = newPreset;
-				buildEditorTree();
-				updateWebVSPreset();
-			}
-		};
-	})();
-	reader.readAsText(dropFile);
+			//We'll just deal with a single preset for now
+			// In the future avs/webvs presets can be shoved in to an array or put in to local storage
+			singlePresetLoaded = true;
+		}
+	}
 }
 
 function sortWindowsZIndex(topid) {
@@ -667,6 +676,8 @@ function startWebVS() {
 	dancer.play();
 
 	webVSActive = true;
+
+	presetIds = webvs.getPreset();
 }
 function stopWebVS() {
 	if (!haveWebVS) { return; }
@@ -681,7 +692,28 @@ function updateWebVSPreset() {
 
 	webvs.loadPreset(preset);
 	webvs.start();
+	presetIds = webvs.getPreset();
 }
+/*var idTree = [];
+function traverseCallback(id, parent) {
+	if (!parent) {
+		idTree = [{"id": id, "children": []}];
+	} else {
+		getNode(idTree, id, parent);
+	}
+}
+function getNode(node, id, parent) {
+	if (node) {
+		for (var i = 0; i < node.length; i++) {
+			if (node[i].id == parent) {
+				node[i].children.push({"id": id, "children": []});
+				return true;
+			}
+			var found = getNode(node[i].children, id, parent);
+			if (found) return found;
+		}
+	}
+};*/
 
 function changeHelpTab(page) {
 	document.getElementById('tab' + selectedHelpTab).setAttribute('class', 'tab');
@@ -1160,6 +1192,7 @@ function duplicatedSelected() {
 	} else { //This is a root element
 		preset.components.splice(Math.max(0, treePos[0]), 0, node);
 	}
+	//For webvs do: addComponent then updateComponent
 
 
 	buildEditorTree();
@@ -1178,16 +1211,21 @@ function removeSelected() {
 
 	var treePos = selectedEffect.id.substr(3).split('-');
 	var node = preset.components[treePos[0]];
+	if (haveWebVS && webVSActive) { var nodeID = presetIds.components[treePos[0]]; }
 	if (treePos.length > 1) {
 		for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
 			node = node.components[treePos[i]];
+			if (haveWebVS && webVSActive) { nodeID = node.components[treePos[i]]; }
 		}
+		if (haveWebVS && webVSActive) { webvs.removeComponent(nodeID.components[treePos[i]].id); }
 		node.components.splice(treePos[i], 1);
 	} else { //This is a root element
+		if (haveWebVS && webVSActive) { webvs.removeComponent(presetIds.components[treePos[0]].id); }
 		preset.components.splice(treePos[0], 1);
 	}
 
 	buildEditorTree();
+	if (haveWebVS && webVSActive) { presetIds = webvs.getPreset(); }
 
 	//Select the effect that moved into the removed effects position
 	if (document.getElementById('ET-' + treePos.join('-'))) {
@@ -1203,8 +1241,6 @@ function removeSelected() {
 	var evt = document.createEvent("MouseEvents");
 	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 	newSel.dispatchEvent(evt);
-
-	updateWebVSPreset();
 }
 
 function updatePreset(e) {
@@ -1235,13 +1271,16 @@ function updatePreset(e) {
 		} else {
 			preset[effect] = newValue;
 		}
+		if (haveWebVS && webVSActive) { webvs.updateComponent("root", preset); }
 	} else {
 		//Walk the tree
 		var treePos = tree.substr(3).split('-');
 		var node = preset.components[treePos[0]];
+		if (haveWebVS && webVSActive) { var nodeID = presetIds.components[treePos[0]]; }
 		if (treePos.length > 1) {
 			for (var i = 1; i < treePos.length; i++) {
 				node = node.components[treePos[i]];
+				if (haveWebVS && webVSActive) { nodeID = nodeID.components[treePos[i]]; }
 			}
 		}
 		if (effect.indexOf('-') != -1) {
@@ -1251,9 +1290,12 @@ function updatePreset(e) {
 		} else {
 			node[effect] = newValue;
 		}
+		if (haveWebVS && webVSActive) { webvs.updateComponent(nodeID.id, node); }
 	}
 
-	updateWebVSPreset();
+	if (haveWebVS && webVSActive) { presetIds = webvs.getPreset(); }
+
+	//updateWebVSPreset();
 }
 
 function addThisEffect(e) {
@@ -1278,15 +1320,20 @@ function addThisEffect(e) {
 		}
 
 		var node = preset.components[treePos[0]];
+		if (haveWebVS && webVSActive) { var nodeID = presetIds.components[treePos[0]]; }
 		if (treePos.length > 1) {
 			for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
 				node = node.components[treePos[i]];
+				if (haveWebVS && webVSActive) { nodeID = nodeID.components[treePos[i]]; }
 			}
+			if (haveWebVS && webVSActive) { webvs.updateComponent(nodeID, Math.max(0, treePos[i]), newNode); }
 			node.components.splice(Math.max(0, treePos[i]), 0, newNode);
 		} else { //This is a root element
+			if (haveWebVS && webVSActive) { webvs.updateComponent("root", Math.max(0, treePos[0]), newNode); }
 			preset.components.splice(Math.max(0, treePos[0]), 0, newNode);
 		}
 	}
+	if (haveWebVS && webVSActive) { presetIds = webvs.getPreset(); }
 
 
 	buildEditorTree();
@@ -1296,7 +1343,7 @@ function addThisEffect(e) {
 	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 	document.getElementById('ET-' + treePos.join('-')).dispatchEvent(evt);
 
-	updateWebVSPreset();
+	//updateWebVSPreset();
 }
 
 function buildEffectMenu() {
