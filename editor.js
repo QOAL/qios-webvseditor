@@ -51,6 +51,8 @@ var globalMenus = [
 
 	Once we have the ability to enqueue music we should add a playlist and the ability to assign presets to songs.
 		Though it would be cool if you could change regXX or gmegabuf value, which would allow for all in one preset that can control its own transitions.
+
+	Let the user give names to effects in the tree.
 */
 
 var preset = {"clearFrame": false, "components": []};
@@ -1180,16 +1182,23 @@ function duplicatedSelected() {
 
 	var treePos = selectedEffect.id.substr(3).split('-');
 	var node = preset.components[treePos[0]];
+	if (haveWebVS && webVSActive) { var nodeID = webvs.getPreset().components[treePos[0]]; }
 	if (treePos.length > 1) {
 		for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
 			node = node.components[treePos[i]];
+			if (haveWebVS && webVSActive) { nodeID = node.components[treePos[i]]; }
 		}
-		node.components.splice(Math.max(0, treePos[i]), 0, node.components[treePos[i]]);
+		//reduce duplicate code!
+		var newNode = JSON.parse(JSON.stringify(node.components[treePos[i]]));
+		delete newNode.id;
+		node.components.splice(Math.max(0, treePos[i]), 0, newNode);
+		if (haveWebVS && webVSActive) { webvs.addComponent(nodeID.id, newNode, Math.max(0, treePos[0])); }
 	} else { //This is a root element
-		preset.components.splice(Math.max(0, treePos[0]), 0, node);
+		var newNode = JSON.parse(JSON.stringify(node));
+		delete newNode.id;
+		if (haveWebVS && webVSActive) { webvs.addComponent("root", newNode, Math.max(0, treePos[0])); }
+		preset.components.splice(Math.max(0, treePos[0]), 0, newNode);
 	}
-	//For webvs do: addComponent then updateComponent
-
 
 	buildEditorTree();
 
@@ -1198,8 +1207,6 @@ function duplicatedSelected() {
 	var evt = document.createEvent("MouseEvents");
 	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 	document.getElementById('ET-' + treePos.join('-')).dispatchEvent(evt);
-
-	updateWebVSPreset();
 }
 
 function removeSelected() {
@@ -1296,14 +1303,16 @@ function addThisEffect(e) {
 	//If the selected element is an effects list then the effect is insert as the first child in that list
 	//Otherwise it is inserted before the selected effect
 	if (!e.target.id || e.target.id.substr(0, 5) != 'menu-') { return; }
+	var newType = e.target.id.substr(5);
 
-	var newNode = {"type": e.target.id.substr(5)}; //Basic stub node. Unsure if this is okay for the long term.
-	if (e.target.id.substr(5) == 'EffectList') { //Effect Lists need a bit more fleshing out to be funcational
+	var newNode = effectInfo[newType] && effectInfo[newType].stub ? effectInfo[newType].stub : {"type": newType}; //Basic stub node. Unsure if this is okay for the long term.
+	if (newType == 'EffectList') { //Effect Lists need a bit more fleshing out to be funcational
 		newNode.components = [];
 	}
 
 	if (!selectedEffect || selectedEffect.id == 'ET-Main') {
 		var treePos = [0]
+		if (haveWebVS && webVSActive) { webvs.addComponent("root", newNode, 0); }
 		preset.components.splice(0, 0, newNode);
 	} else {
 		var treePos = selectedEffect.id.substr(3).split('-');
@@ -1319,14 +1328,13 @@ function addThisEffect(e) {
 				node = node.components[treePos[i]];
 				if (haveWebVS && webVSActive) { nodeID = nodeID.components[treePos[i]]; }
 			}
-			if (haveWebVS && webVSActive) { webvs.updateComponent(nodeID, Math.max(0, treePos[i]), newNode); }
+			if (haveWebVS && webVSActive) { webvs.addComponent(nodeID.id, newNode, Math.max(0, treePos[i])); }
 			node.components.splice(Math.max(0, treePos[i]), 0, newNode);
 		} else { //This is a root element
-			if (haveWebVS && webVSActive) { webvs.updateComponent("root", Math.max(0, treePos[0]), newNode); }
+			if (haveWebVS && webVSActive) { webvs.addComponent("root", newNode, Math.max(0, treePos[0])); }
 			preset.components.splice(Math.max(0, treePos[0]), 0, newNode);
 		}
 	}
-
 
 	buildEditorTree();
 

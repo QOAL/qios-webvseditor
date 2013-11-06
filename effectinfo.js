@@ -59,6 +59,14 @@ var effectInfo = {
 			},
 			"help": { control: control_button, "value": "Expression Help", "onclick": "newExpressionHelpWindow('SuperScope');" }
 		},
+		"stub": {
+			"type": "SuperScope",
+			"code": { "init": "n=800", "perFrame": "t=t-0.05", "onBeat": "1;", "perPoint": "d=i+v*0.2; r=t+i*$PI*4; x=cos(r)*d; y=sin(r)*d" },
+			"source": "SPECTRUM",
+			"audioChannel": "CENTER",
+			"drawMode": "LINES",
+			"colors": ["#ffffff"]
+		},
 		"help": ["Superscope tutorial goes here",
 			"But for now, here is the old text:",
 			"You can specify expressions that run on Init, Frame, and on Beat.",
