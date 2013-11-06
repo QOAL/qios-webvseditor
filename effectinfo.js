@@ -52,7 +52,7 @@ var effectInfo = {
 			},
 			"source": { label: "Source data:", control: control_radio, "options": {"WAVEFORM": "Waveform", "SPECTRUM": "Spectrum"}, "default": "SPECTRUM" },
 			"audioChannel": { label: "Channel:", control: control_radio, "options": {"LEFT": "Left", "CENTER": "Centre", "RIGHT": "Right"}, "default": "CENTER" },
-			"lineType": { label: "Draw as:", control: control_radio, "options": {"DOTS": "Dots", "LINES": "Lines"}, "default": "LINES"},
+			"drawMode": { label: "Draw as:", control: control_radio, "options": {"DOTS": "Dots", "LINES": "Lines"}, "default": "LINES"},
 			"colour": {
 				"count": { label: "Cycle through", control: control_number, "min": 1, "max": 16, "default": 1 },
 				"list": { label: "Colours (Max 16)", control: control_colour_bar}

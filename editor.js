@@ -54,7 +54,6 @@ var globalMenus = [
 */
 
 var preset = {"clearFrame": false, "components": []};
-var presetIds = {};
 
 
 //From http://www.somacon.com/p355.php
@@ -676,8 +675,6 @@ function startWebVS() {
 	dancer.play();
 
 	webVSActive = true;
-
-	presetIds = webvs.getPreset();
 }
 function stopWebVS() {
 	if (!haveWebVS) { return; }
@@ -692,7 +689,6 @@ function updateWebVSPreset() {
 
 	webvs.loadPreset(preset);
 	webvs.start();
-	presetIds = webvs.getPreset();
 }
 /*var idTree = [];
 function traverseCallback(id, parent) {
@@ -1211,7 +1207,7 @@ function removeSelected() {
 
 	var treePos = selectedEffect.id.substr(3).split('-');
 	var node = preset.components[treePos[0]];
-	if (haveWebVS && webVSActive) { var nodeID = presetIds.components[treePos[0]]; }
+	if (haveWebVS && webVSActive) { var nodeID = webvs.getPreset().components[treePos[0]]; }
 	if (treePos.length > 1) {
 		for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
 			node = node.components[treePos[i]];
@@ -1220,12 +1216,11 @@ function removeSelected() {
 		if (haveWebVS && webVSActive) { webvs.removeComponent(nodeID.components[treePos[i]].id); }
 		node.components.splice(treePos[i], 1);
 	} else { //This is a root element
-		if (haveWebVS && webVSActive) { webvs.removeComponent(presetIds.components[treePos[0]].id); }
+		if (haveWebVS && webVSActive) { webvs.removeComponent(nodeID.id); }
 		preset.components.splice(treePos[0], 1);
 	}
 
 	buildEditorTree();
-	if (haveWebVS && webVSActive) { presetIds = webvs.getPreset(); }
 
 	//Select the effect that moved into the removed effects position
 	if (document.getElementById('ET-' + treePos.join('-'))) {
@@ -1276,7 +1271,7 @@ function updatePreset(e) {
 		//Walk the tree
 		var treePos = tree.substr(3).split('-');
 		var node = preset.components[treePos[0]];
-		if (haveWebVS && webVSActive) { var nodeID = presetIds.components[treePos[0]]; }
+		if (haveWebVS && webVSActive) { var nodeID = webvs.getPreset().components[treePos[0]]; }
 		if (treePos.length > 1) {
 			for (var i = 1; i < treePos.length; i++) {
 				node = node.components[treePos[i]];
@@ -1292,8 +1287,6 @@ function updatePreset(e) {
 		}
 		if (haveWebVS && webVSActive) { webvs.updateComponent(nodeID.id, node); }
 	}
-
-	if (haveWebVS && webVSActive) { presetIds = webvs.getPreset(); }
 
 	//updateWebVSPreset();
 }
@@ -1320,7 +1313,7 @@ function addThisEffect(e) {
 		}
 
 		var node = preset.components[treePos[0]];
-		if (haveWebVS && webVSActive) { var nodeID = presetIds.components[treePos[0]]; }
+		if (haveWebVS && webVSActive) { var nodeID = webvs.getPreset().components[treePos[0]]; }
 		if (treePos.length > 1) {
 			for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
 				node = node.components[treePos[i]];
@@ -1333,7 +1326,6 @@ function addThisEffect(e) {
 			preset.components.splice(Math.max(0, treePos[0]), 0, newNode);
 		}
 	}
-	if (haveWebVS && webVSActive) { presetIds = webvs.getPreset(); }
 
 
 	buildEditorTree();
