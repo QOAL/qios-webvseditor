@@ -306,10 +306,13 @@ function mouseup(e) {
 			if (treePos == 'torTree') { treePos = []; g--; } //If it's a root element then correct for that.
 			treePos.push(g);
 			var node = preset;
+			if (haveWebVS && webVSActive) { var nodeID = webvs.getPreset(); }
 			if (treePos.length > 1) {
 				node = preset.components[treePos[0]];
+				if (haveWebVS && webVSActive) { nodeID = nodeID.components[treePos[0]]; }
 				for (var i = 1; i < treePos.length - 1; i++) {
 					node = node.components[treePos[i]];
+					if (haveWebVS && webVSActive) { nodeID = nodeID.components[treePos[i]]; }
 				}
 			}
 			node = node.components;
@@ -342,14 +345,14 @@ function mouseup(e) {
 
 			delete oldNode.killMe;
 
+			if (haveWebVS && webVSActive) { webvs.moveComponent(oldNode.id, nodeID.id); }
+
 			dummyEffect.parentNode.removeChild(dummyEffect);
 			dummyEffect = null;
 			paddingElement.parentNode.removeChild(paddingElement);
 			paddingElement = null;
 
 			buildEditorTree();
-
-			updateWebVSPreset();
 
 			//Select the newly moved effect
 			if (document.getElementById('ET-' + treePos.join('-'))) {
@@ -1186,13 +1189,13 @@ function duplicatedSelected() {
 	if (treePos.length > 1) {
 		for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
 			node = node.components[treePos[i]];
-			if (haveWebVS && webVSActive) { nodeID = node.components[treePos[i]]; }
+			if (haveWebVS && webVSActive) { nodeID = nodeID.components[treePos[i]]; }
 		}
 		//reduce duplicate code!
 		var newNode = JSON.parse(JSON.stringify(node.components[treePos[i]]));
 		delete newNode.id;
 		node.components.splice(Math.max(0, treePos[i]), 0, newNode);
-		if (haveWebVS && webVSActive) { webvs.addComponent(nodeID.id, newNode, Math.max(0, treePos[0])); }
+		if (haveWebVS && webVSActive) { webvs.addComponent(nodeID.id, newNode, Math.max(0, treePos[i])); }
 	} else { //This is a root element
 		var newNode = JSON.parse(JSON.stringify(node));
 		delete newNode.id;
@@ -1218,7 +1221,7 @@ function removeSelected() {
 	if (treePos.length > 1) {
 		for (var i = 1; i < treePos.length - 1; i++) { //We want to land on the effects parent node
 			node = node.components[treePos[i]];
-			if (haveWebVS && webVSActive) { nodeID = node.components[treePos[i]]; }
+			if (haveWebVS && webVSActive) { nodeID = nodeID.components[treePos[i]]; }
 		}
 		if (haveWebVS && webVSActive) { webvs.removeComponent(nodeID.components[treePos[i]].id); }
 		node.components.splice(treePos[i], 1);
@@ -1294,8 +1297,6 @@ function updatePreset(e) {
 		}
 		if (haveWebVS && webVSActive) { webvs.updateComponent(nodeID.id, node); }
 	}
-
-	//updateWebVSPreset();
 }
 
 function addThisEffect(e) {
@@ -1342,8 +1343,6 @@ function addThisEffect(e) {
 	var evt = document.createEvent("MouseEvents");
 	evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
 	document.getElementById('ET-' + treePos.join('-')).dispatchEvent(evt);
-
-	//updateWebVSPreset();
 }
 
 function buildEffectMenu() {
