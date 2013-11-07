@@ -286,6 +286,8 @@ function mouseup(e) {
 
 	if (reorderEffect != null) {
 		if (dummyEffect) {
+			if (haveWebVS && webVSActive) { var nodeID = webvs.getPreset(); }
+
 			//Get the node that we're moving
 			var oldTreePos = reorderEffect.id.substr(3).split('-');
 			var oldNode = preset.components[oldTreePos[0]];
@@ -306,7 +308,6 @@ function mouseup(e) {
 			if (treePos == 'torTree') { treePos = []; g--; } //If it's a root element then correct for that.
 			treePos.push(g);
 			var node = preset;
-			if (haveWebVS && webVSActive) { var nodeID = webvs.getPreset(); }
 			if (treePos.length > 1) {
 				node = preset.components[treePos[0]];
 				if (haveWebVS && webVSActive) { nodeID = nodeID.components[treePos[0]]; }
@@ -318,8 +319,10 @@ function mouseup(e) {
 			node = node.components;
 			//insert a copy of the old node into the correct place
 			if (node[g]) {
+				if (haveWebVS && webVSActive) { webvs.moveComponent(oldNode.id, nodeID.id, g); }
 				node.splice(g, 0, oldNode);
 			} else {
+				if (haveWebVS && webVSActive) { webvs.moveComponent(oldNode.id, nodeID.id, nodeID.components.length); }
 				node.push(oldNode);
 			}
 
@@ -344,8 +347,6 @@ function mouseup(e) {
 			}
 
 			delete oldNode.killMe;
-
-			if (haveWebVS && webVSActive) { webvs.moveComponent(oldNode.id, nodeID.id); }
 
 			dummyEffect.parentNode.removeChild(dummyEffect);
 			dummyEffect = null;
@@ -1306,7 +1307,7 @@ function addThisEffect(e) {
 	if (!e.target.id || e.target.id.substr(0, 5) != 'menu-') { return; }
 	var newType = e.target.id.substr(5);
 
-	var newNode = effectInfo[newType] && effectInfo[newType].stub ? effectInfo[newType].stub : {"type": newType}; //Basic stub node. Unsure if this is okay for the long term.
+	var newNode = effectInfo[newType] && effectInfo[newType].stub ? JSON.parse(JSON.stringify(effectInfo[newType].stub)) : {"type": newType}; //Basic stub node. Unsure if this is okay for the long term.
 	if (newType == 'EffectList') { //Effect Lists need a bit more fleshing out to be funcational
 		newNode.components = [];
 	}

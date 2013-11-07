@@ -65,7 +65,7 @@ var effectInfo = {
 			"source": "SPECTRUM",
 			"audioChannel": "CENTER",
 			"drawMode": "LINES",
-			"colors": ["#ffffff", "#ff0000"]
+			"colors": ["#ffffff"]
 		},
 		"help": ["Superscope tutorial goes here",
 			"But for now, here is the old text:",
