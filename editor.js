@@ -319,10 +319,8 @@ function mouseup(e) {
 			node = node.components;
 			//insert a copy of the old node into the correct place
 			if (node[g]) {
-				if (haveWebVS && webVSActive) { webvs.moveComponent(oldNode.id, nodeID.id, g); }
 				node.splice(g, 0, oldNode);
 			} else {
-				if (haveWebVS && webVSActive) { webvs.moveComponent(oldNode.id, nodeID.id, nodeID.components.length); }
 				node.push(oldNode);
 			}
 
@@ -354,6 +352,8 @@ function mouseup(e) {
 			paddingElement = null;
 
 			buildEditorTree();
+
+			if (haveWebVS && webVSActive) { webvs.moveComponent(oldNode.id, nodeID.id, node[g] ? g : nodeID.components.length); }
 
 			//Select the newly moved effect
 			if (document.getElementById('ET-' + treePos.join('-'))) {
@@ -1108,7 +1108,7 @@ function buildPaneElement(typeInfo, data, name, parent) {
 			var rows = Math.ceil(Math.sqrt(data.length));
 			for (var i = 0; i < data.length; i++) {
 				if (i % rows == 0) { output += '<br />'; }
-				output += '<input type="text" value="' + data[i] + '" id="' + thisID + i + '" style="width:14px;" />';
+				output += '<input type="text" value="' + data[i] + '" id="' + thisID + '-' + i + '" style="width:14px;" onchange="updatePreset(event)" />';
 			}
 			break;
 		default:
