@@ -38,7 +38,40 @@ var effectInfo = {
 		"type": "",
 		"pane": {
 			"enabled": { label: "Enabled:", control: control_check, "default": true },
-		}
+			"enableOnBeat": { label: "Enable on beat:", control: control_check, "default": false },
+			"enableOnBeatFor": { label: "For how many frames:", control: control_number, "default": 1 },
+			"clearFrame": { label: "Clear every frame:", control: control_check, "default": false },
+			"input": { label: "Input blending:", control: control_dropdown,
+				"options": {
+					"IGNORE": "Ignore", "REPLACE": "Replace", "5050": "50/50", "MAXIMUM": "Maximum",
+					"ADDITIVE": "Additive", "SUBTRACTIVE1": "Subtractive 1", "SUBTRACTIVE2": "Subtractive 2",
+					"EVERYOTHERLINE": "Every Other Line", "EVERYOTHERPIXEL": "Every Other Pixel", "XOR": "XOR",
+					"ADJUSTABLE": "Adjustable", "MULTIPLY": "Multiply", "BUFFER": "Buffer", "MINIMUM": "Minimum"
+				}
+			},
+			"inputAdjustable": { label: "Adjustable value:", control: control_slider, "default": .5 },
+			"output": { label: "Input blending:", control: control_dropdown,
+				"options": {
+					"IGNORE": "Ignore", "REPLACE": "Replace", "5050": "50/50", "MAXIMUM": "Maximum",
+					"ADDITIVE": "Additive", "SUBTRACTIVE1": "Subtractive 1", "SUBTRACTIVE2": "Subtractive 2",
+					"EVERYOTHERLINE": "Every Other Line", "EVERYOTHERPIXEL": "Every Other Pixel", "XOR": "XOR",
+					"ADJUSTABLE": "Adjustable", "MULTIPLY": "Multiply", "BUFFER": "Buffer", "MINIMUM": "Minimum"
+				}
+			},
+			"outputAdjustable": { label: "Adjustable value:", control: control_slider, "default": .5 },
+			"override": { label: "Use evaluation override (Can change Enabled, Clear, etc):", control: control_check, "default": false },
+			"code": {
+				"init": { label: "Init", control: control_code, "height": 30 },
+				"perFrame": { label: "Per Frame", control: control_code, "height": 60 }
+			},
+			"help": { control: control_button, "value": "Expression Help", "onclick": "newExpressionHelpWindow('EffectList');" }
+		},
+		"help": ["Read/write 'enabled' to get/set whether the effect list is enabled for this frame",
+			"Read/write 'beat' to get/set whether there is currently a beat",
+			"Read/write 'clear' to get/set whether to clear the framebuffer",
+			"If the input blend is set to adjustable, 'alphain' can be set from 0.0-1.0",
+			"If the output blend is set to adjustable, 'alphaout' can be set from 0.0-1.0",
+			"'w' and 'h' are set with the current width and height of the frame"].join("\n")
 	},
 	"SuperScope": {
 		"name": "SuperScope",
