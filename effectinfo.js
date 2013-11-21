@@ -66,6 +66,12 @@ var effectInfo = {
 			},
 			"help": { control: control_button, "value": "Expression Help", "onclick": "newExpressionHelpWindow('EffectList');" }
 		},
+		"stub": {
+			"type": "EffectList",
+			"enabled": true,
+			"input": "IGNORE",
+			"output": "REPLACE"
+		},
 		"help": ["Read/write 'enabled' to get/set whether the effect list is enabled for this frame",
 			"Read/write 'beat' to get/set whether there is currently a beat",
 			"Read/write 'clear' to get/set whether to clear the framebuffer",
@@ -170,6 +176,11 @@ var effectInfo = {
 			"edgeMode": { label: "Viewport edge handling:", control: control_radio, "options": {"WRAP": "Wrap", "EXTEND": "Extend"}, "default": "EXTEND" },
 			"absolute": { label: "Absolute:", control: control_check, "default": false },
 			"twoPass": { label: "2-Pass:", control: control_check, "default": false }
+		},
+		"stub": {
+			"type": "Convolution",
+			"enabled": true,
+			"kernel": Array.apply(null, new Array(7 * 7)).map(Number.prototype.valueOf, 0)
 		}
 	}
 };
